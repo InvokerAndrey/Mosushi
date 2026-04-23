@@ -4,11 +4,21 @@ import { sushiMenuItems } from "@/data/sushiMenu";
 type PaymentMethod = "CASH" | "CARD";
 
 type OrderRequestBody = {
-  name: string;
-  phoneNumber: string;
-  address: string;
-  paymentMethod: PaymentMethod;
+  orderType: "pickup" | "delivery";
+  totalPrice: number;
   cartItems: Record<string, number>;
+  pickup: {
+    name: string;
+    phoneNumber: string;
+    comment?: string;
+  };
+  delivery: {
+    name: string;
+    phoneNumber: string;
+    address: string;
+    paymentMethod: PaymentMethod | "OTHER";
+    comment?: string;
+  };
 };
 
 const isValidPaymentMethod = (value: string): value is PaymentMethod => {
@@ -34,22 +44,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
   }
 
-  const name = body.name?.trim();
-  const phoneNumber = body.phoneNumber?.trim();
-  const address = body.address?.trim();
-  const paymentMethod = body.paymentMethod;
+  const orderType = body.orderType;
   const cartItems = body.cartItems;
+  const pickup = body.pickup;
+  const delivery = body.delivery;
 
-  if (!name || !phoneNumber || !address) {
-    return NextResponse.json({ message: "All checkout fields are required." }, { status: 400 });
-  }
-
-  if (!isValidPaymentMethod(paymentMethod)) {
-    return NextResponse.json({ message: "Invalid payment method." }, { status: 400 });
+  if (orderType !== "pickup" && orderType !== "delivery") {
+    return NextResponse.json({ message: "Invalid order type." }, { status: 400 });
   }
 
   if (!cartItems || typeof cartItems !== "object") {
     return NextResponse.json({ message: "Cart is missing." }, { status: 400 });
+  }
+
+  if (!pickup || !delivery) {
+    return NextResponse.json({ message: "Checkout data is missing." }, { status: 400 });
   }
 
   const lineItems = sushiMenuItems
@@ -73,17 +82,59 @@ export async function POST(request: Request) {
 
   const totalPrice = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
 
+  if (Math.abs(totalPrice - body.totalPrice) > 0.01) {
+    return NextResponse.json({ message: "Invalid total price." }, { status: 400 });
+  }
+
+  const pickupName = pickup.name?.trim();
+  const pickupPhoneNumber = pickup.phoneNumber?.trim();
+  const pickupComment = pickup.comment?.trim() ?? "";
+
+  const deliveryName = delivery.name?.trim();
+  const deliveryPhoneNumber = delivery.phoneNumber?.trim();
+  const deliveryAddress = delivery.address?.trim();
+  const deliveryPaymentMethod = delivery.paymentMethod;
+  const deliveryComment = delivery.comment?.trim() ?? "";
+
+  if (orderType === "pickup" && (!pickupName || !pickupPhoneNumber)) {
+    return NextResponse.json({ message: "Pickup name and phone are required." }, { status: 400 });
+  }
+
+  if (orderType === "delivery") {
+    if (!deliveryName || !deliveryPhoneNumber || !deliveryAddress) {
+      return NextResponse.json({ message: "Delivery name, phone and address are required." }, { status: 400 });
+    }
+
+    if (deliveryPaymentMethod !== "OTHER" && !isValidPaymentMethod(deliveryPaymentMethod)) {
+      return NextResponse.json({ message: "Invalid payment method." }, { status: 400 });
+    }
+  }
+
   const itemsText = lineItems
     .map((item) => `- ${item.name} x${item.quantity} = $${item.lineTotal.toFixed(2)}`)
     .join("\n");
 
+  const orderDetails =
+    orderType === "pickup"
+      ? [
+          "Type: Pickup",
+          `Name: ${pickupName}`,
+          `Phone: ${pickupPhoneNumber}`,
+          `Comment: ${pickupComment || "-"}`
+        ]
+      : [
+          "Type: Delivery",
+          `Name: ${deliveryName}`,
+          `Phone: ${deliveryPhoneNumber}`,
+          `Address: ${deliveryAddress}`,
+          `Payment: ${deliveryPaymentMethod}`,
+          `Comment: ${deliveryComment || "-"}`
+        ];
+
   const messageText = [
     "New M\u00F5 Sushi order",
     "",
-    `Name: ${name}`,
-    `Phone: ${phoneNumber}`,
-    `Address: ${address}`,
-    `Payment: ${paymentMethod}`,
+    ...orderDetails,
     "",
     "Items:",
     itemsText,
