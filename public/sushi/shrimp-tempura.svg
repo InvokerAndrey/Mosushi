@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+  <rect width="600" height="320" fill="#fff1f2" />
+  <circle cx="160" cy="160" r="88" fill="#fecdd3" />
+  <circle cx="300" cy="160" r="88" fill="#fb7185" />
+  <circle cx="440" cy="160" r="88" fill="#be123c" />
+  <text x="36" y="44" fill="#881337" font-size="28" font-family="Arial, sans-serif" font-weight="700">M� Sushi</text>
+</svg>
