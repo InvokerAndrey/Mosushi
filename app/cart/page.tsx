@@ -145,12 +145,12 @@ export default function CartPage() {
 
           <div className="flex flex-col gap-4 rounded-xl bg-zinc-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</p>
-            <button
-              type="button"
+            <Link
+              href="/checkout"
               className="rounded-md bg-red-500 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-600"
             >
               Complete order
-            </button>
+            </Link>
           </div>
         </section>
       )}
