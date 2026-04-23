@@ -1,7 +1,8 @@
-export const CART_STORAGE_KEY = "mo-sushi-cart";
+import { CART_STORAGE_KEY, CHECKOUT_FORM_STORAGE_KEY, PHONE_PREFIX } from "./constants";
 
 export type CartState = Record<string, number>;
 
+// Cart storage functions
 export const readCartFromStorage = (): CartState => {
   const savedCart = localStorage.getItem(CART_STORAGE_KEY);
   if (!savedCart) {

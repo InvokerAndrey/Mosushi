@@ -94,7 +94,20 @@ export async function POST(request: Request) {
   const deliveryPhoneNumber = delivery.phoneNumber?.trim();
   const deliveryAddress = delivery.address?.trim();
   const deliveryPaymentMethod = delivery.paymentMethod;
-  const deliveryComment = delivery.comment?.trim() ?? "";
+  const deliveryRawComment = delivery.comment?.trim() ?? "";
+
+  // Parse change info and user comment from the combined comment field
+  let deliveryChange = "";
+  let deliveryComment = "";
+  if (deliveryRawComment) {
+    const lines = deliveryRawComment.split("\n");
+    if (lines[0]?.startsWith("Change:")) {
+      deliveryChange = lines[0];
+      deliveryComment = lines.slice(1).join("\n").trim();
+    } else {
+      deliveryComment = deliveryRawComment;
+    }
+  }
 
   if (orderType === "pickup" && (!pickupName || !pickupPhoneNumber)) {
     return NextResponse.json({ message: "Pickup name and phone are required." }, { status: 400 });
@@ -128,8 +141,9 @@ export async function POST(request: Request) {
           `Phone: ${deliveryPhoneNumber}`,
           `Address: ${deliveryAddress}`,
           `Payment: ${deliveryPaymentMethod}`,
+          deliveryChange ? `Change: ${deliveryChange.replace("Change: ", "")}` : "",
           `Comment: ${deliveryComment || "-"}`
-        ];
+        ].filter(line => line !== "");
 
   const messageText = [
     "New M\u00F5 Sushi order",
