@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { CART_STORAGE_KEY, readCartFromStorage } from "@/lib/cart";
 
 type PaymentMethod = "CASH" | "CARD" | "";
 
@@ -10,6 +11,9 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const isOrderEnabled = useMemo(() => {
     return (
@@ -19,6 +23,60 @@ export default function CheckoutPage() {
       paymentMethod !== ""
     );
   }, [address, name, paymentMethod, phoneNumber]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!isOrderEnabled || isSubmitting) {
+      return;
+    }
+
+    const cartItems = readCartFromStorage();
+    const cartHasItems = Object.values(cartItems).some((quantity) => quantity > 0);
+    if (!cartHasItems) {
+      setErrorMessage("Your cart is empty. Add items before placing an order.");
+      setSuccessMessage("");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          phoneNumber: phoneNumber.trim(),
+          address: address.trim(),
+          paymentMethod,
+          cartItems
+        })
+      });
+
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        setErrorMessage(result.message ?? "Failed to place your order. Please try again.");
+        return;
+      }
+
+      setSuccessMessage("Order sent successfully. We will contact you soon.");
+      setName("");
+      setPhoneNumber("");
+      setAddress("");
+      setPaymentMethod("");
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {
+      setErrorMessage("Something went wrong while sending the order.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-3xl px-6 py-10">
@@ -30,7 +88,7 @@ export default function CheckoutPage() {
         </Link>
       </header>
 
-      <form className="space-y-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="space-y-2">
           <label htmlFor="customer-name" className="text-sm font-semibold text-zinc-800">
             Name
@@ -100,12 +158,15 @@ export default function CheckoutPage() {
         </fieldset>
 
         <button
-          type="button"
-          disabled={!isOrderEnabled}
+          type="submit"
+          disabled={!isOrderEnabled || isSubmitting}
           className="w-full rounded-md bg-red-500 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-red-300"
         >
-          Order
+          {isSubmitting ? "Sending..." : "Order"}
         </button>
+
+        {errorMessage ? <p className="text-sm font-medium text-red-600">{errorMessage}</p> : null}
+        {successMessage ? <p className="text-sm font-medium text-green-700">{successMessage}</p> : null}
       </form>
     </main>
   );
