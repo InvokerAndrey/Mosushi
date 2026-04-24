@@ -124,7 +124,7 @@ export async function POST(request: Request) {
   }
 
   const itemsText = lineItems
-    .map((item) => `- ${item.name} x${item.quantity} = $${item.lineTotal.toFixed(2)}`)
+    .map((item) => `- ${item.name} x${item.quantity} = ${item.lineTotal.toFixed(2)} BYN`)
     .join("\n");
 
   const orderDetails =
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     "Items:",
     itemsText,
     "",
-    `Total: $${totalPrice.toFixed(2)}`
+    `Total: ${totalPrice.toFixed(2)} BYN`
   ].join("\n");
 
   const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
