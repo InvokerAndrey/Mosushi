@@ -74,14 +74,14 @@ const config: Config = {
         "md": "24px"
       },
       fontFamily: {
-        "ingredient-list": ["Epilogue"],
-        "heading-xl": ["Epilogue"],
-        "product-name": ["Epilogue"],
-        "price": ["Epilogue"],
-        "heading-lg": ["Epilogue"],
-        "body-regular": ["Epilogue"],
-        "label-caps": ["Epilogue"],
-        "epilogue": ["Epilogue"]
+        "ingredient-list": ["Satoshi"],
+        "heading-xl": ["Satoshi"],
+        "product-name": ["Satoshi"],
+        "price": ["Satoshi"],
+        "heading-lg": ["Satoshi"],
+        "body-regular": ["Satoshi"],
+        "label-caps": ["Satoshi"],
+        "satoshi": ["Satoshi"]
       },
       fontSize: {
         "ingredient-list": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],

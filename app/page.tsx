@@ -265,7 +265,7 @@ export default function HomePage() {
             <a 
               href="#" 
               onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className={`font-black italic tracking-tighter text-zinc-900 dark:text-white transition-all duration-300 hover:text-primary-container cursor-pointer ${headerScrolled ? 'text-2xl' : 'text-3xl'}`}
+              className={`font-black tracking-tighter text-zinc-900 dark:text-white transition-all duration-300 hover:text-primary-container cursor-pointer ${headerScrolled ? 'text-2xl' : 'text-3xl'}`}
             >
               MoreSushi
             </a>
@@ -296,7 +296,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2 font-body-regular">
                 <span className="material-symbols-outlined">phone</span>
-                <span className="font-bold">+1 234 567 8900</span>
+                <span className="font-bold">+375(29)000-00-00</span>
               </div>
             </div>
 
@@ -307,7 +307,7 @@ export default function HomePage() {
             >
               <span className="material-symbols-outlined">shopping_cart</span>
               <span className="hidden sm:inline">
-                {cartCount === 0 ? "Cart" : `Cart (${cartCount}) - $${totalPrice.toFixed(2)}`}
+                {cartCount === 0 ? "Cart" : `Cart (${cartCount}) - ${totalPrice.toFixed(2)} BYN`}
               </span>
             </button>
           </div>
@@ -759,15 +759,15 @@ export default function HomePage() {
                   <div className="pt-4 space-y-2 mb-lg">
                     <div className="flex justify-between font-body-regular text-tertiary-container">
                       <span>Subtotal</span>
-                      <span>${totalPrice.toFixed(2)}</span>
+                      <span className="min-w-[60px] text-right">{totalPrice.toFixed(2)} BYN</span>
                     </div>
                     <div className="flex justify-between font-body-regular text-tertiary-container">
                       <span>Delivery</span>
-                      <span>$0.00</span>
+                      <span className="min-w-[60px] text-right">0.00 BYN</span>
                     </div>
                     <div className="flex justify-between font-price text-xl mt-4 pt-4 border-t-2 border-on-background">
                       <span>Total</span>
-                      <span className="text-primary-container">${totalPrice.toFixed(2)}</span>
+                      <span className="text-primary-container min-w-[60px] text-right">{totalPrice.toFixed(2)} BYN</span>
                     </div>
                   </div>
 

@@ -2,19 +2,8 @@
 
 Сделать выбор по времени доставки либо через час либо предзаказ на нужное время
 
-Поработать над дизайном:
-Подсмотреть как на других сайтах сделан дизайн товаров, полей и прочего
-
-Почитать про исследования по цветам, какие цвета лучше всего вызывают аппетит, быть может такая информация имеется
-Выбрать единый стиль и цвет
-
-
 На будущее на других сайтах люди дают согласие на обработку своих персональных данных при оформлении заказа
 Так же на сайте снизу пишется УНП предпринимателя
-
-Сделать header, мини версия которого будет always on top как в Годзилле
-
-Все товары сделать на одну страницу, и перематываться на нужную секцию с помощью навигации в хидере
 
 Сделать какую-то админ панель
 
@@ -23,3 +12,76 @@
 Красный #C53030
 Белый #f3f5eb
 Зеленый #2F855A
+
+
+По новому дизайну:
+В мобильной версии слишком далеко скролит
+Потестить другие цвета
+
+
+
+
+
+Промпт на рефактор кода:
+Refactor the entire codebase to improve code quality, readability, and maintainability.
+
+GOALS:
+
+Remove duplicated code and repeated logic
+Simplify overly complex structures
+Improve variable and function naming for clarity
+Ensure the code is easy to read and understand for a non-expert developer
+
+REQUIREMENTS:
+
+Follow modern best practices (React / Next.js / TypeScript)
+Use clean and consistent code style
+Replace unclear or generic names with descriptive ones
+Eliminate unnecessary abstractions and overengineering
+Keep logic simple and explicit
+
+STRUCTURE:
+
+Break large components into smaller reusable components where appropriate
+Separate business logic from UI
+Ensure consistent folder and file organization
+
+STATE MANAGEMENT:
+
+Simplify state usage
+Remove redundant or duplicated state
+Avoid unnecessary complexity (no heavy libraries unless already used)
+
+STYLING:
+
+Ensure consistent styling approach (Tailwind if used)
+Remove duplicate styles
+Keep layout clean and predictable
+
+ERROR HANDLING:
+
+Add basic validation where missing
+Ensure proper handling of edge cases
+
+CLEANUP:
+
+Remove unused variables, functions, imports
+Remove dead code
+Remove commented-out code unless necessary
+
+IMPORTANT:
+
+Do NOT change core functionality or break existing behavior
+Do NOT introduce new libraries
+Do NOT overcomplicate the architecture
+
+PROCESS:
+
+First analyze the codebase and identify issues
+Then apply refactoring step by step
+Keep changes minimal but effective
+
+OUTPUT:
+
+Provide refactored code
+Keep it clean, simple, and production-ready

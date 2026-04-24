@@ -33,7 +33,7 @@ export default function SushiMenuCard({
       </div>
 
       <div className="flex justify-between items-end mt-auto pt-md border-t border-on-background border-dashed">
-        <span className="font-price text-price text-primary-container">${item.price.toFixed(2)}</span>
+        <span className="font-price text-price text-primary-container">{item.price.toFixed(2)} BYN</span>
         
         {quantityInCart === 0 ? (
           <button 

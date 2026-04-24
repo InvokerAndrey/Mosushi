@@ -14,7 +14,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
-      <body className="text-on-background min-h-screen flex flex-col font-epilogue">{children}</body>
+      <body className="text-on-background min-h-screen flex flex-col font-satoshi">{children}</body>
     </html>
   );
 }
