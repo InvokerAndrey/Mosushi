@@ -1,16 +1,18 @@
+"use client";
+
 import { forwardRef } from "react";
 import type { SushiMenuItem } from "@/data/sushiMenu";
 import SushiMenuCard from "./SushiMenuCard";
 import type { CartState } from "@/lib/types";
 
-interface MenuSectionProps {
+type MenuSectionProps = {
   id: string;
   title: string;
   items: SushiMenuItem[];
   cartItems: CartState;
   onAddToCart: (itemId: string) => void;
   onRemoveFromCart: (itemId: string) => void;
-}
+};
 
 const MenuSection = forwardRef<HTMLElement, MenuSectionProps>(
   ({ id, title, items, cartItems, onAddToCart, onRemoveFromCart }, ref) => {

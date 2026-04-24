@@ -1,6 +1,5 @@
-import { CART_STORAGE_KEY, CHECKOUT_FORM_STORAGE_KEY, PHONE_PREFIX } from "./constants";
-
-export type CartState = Record<string, number>;
+import { CART_STORAGE_KEY } from "./constants";
+import type { CartState } from "./types";
 
 // Cart storage functions
 export const readCartFromStorage = (): CartState => {

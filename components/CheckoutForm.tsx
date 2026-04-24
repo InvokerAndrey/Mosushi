@@ -1,38 +1,48 @@
-import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
-import { validatePickupForm, validateDeliveryForm } from "@/lib/validations";
+"use client";
 
-interface CheckoutFormProps {
-  onSubmitOrder: () => void;
-  isSubmitting: boolean;
-  requestError: string;
+import type { CheckoutTab, PickupFormState, DeliveryFormState } from "@/lib/validations";
+import { formatPhoneNumber } from "@/lib/validations";
+
+type CheckoutFormProps = {
+  activeTab: CheckoutTab;
+  setActiveTab: (tab: CheckoutTab) => void;
+  pickupForm: PickupFormState;
+  setPickupForm: React.Dispatch<React.SetStateAction<PickupFormState>>;
+  deliveryForm: DeliveryFormState;
+  setDeliveryForm: React.Dispatch<React.SetStateAction<DeliveryFormState>>;
   pickupErrors: Record<string, string | undefined>;
   deliveryErrors: Record<string, string | undefined>;
   setPickupErrors: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>;
   setDeliveryErrors: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>;
+  requestError: string;
+  isSubmitting: boolean;
+  onSubmitOrder: () => void;
+};
+
+function getInputClassName(hasError?: boolean) {
+  const base = "w-full bg-[#f3f5eb] border-2 border-on-background rounded-none focus:border-primary-container focus:border-[3px] focus:outline-none transition-all px-3 py-2 text-sm outline-none";
+  return hasError
+    ? `${base} border-red-500 focus:border-red-500`
+    : base;
 }
 
 export default function CheckoutForm({
-  onSubmitOrder,
-  isSubmitting,
-  requestError,
+  activeTab,
+  setActiveTab,
+  pickupForm,
+  setPickupForm,
+  deliveryForm,
+  setDeliveryForm,
   pickupErrors,
   deliveryErrors,
   setPickupErrors,
-  setDeliveryErrors
+  setDeliveryErrors,
+  requestError,
+  isSubmitting,
+  onSubmitOrder
 }: CheckoutFormProps) {
-  const {
-    activeTab,
-    setActiveTab,
-    pickupForm,
-    setPickupForm,
-    deliveryForm,
-    setDeliveryForm
-  } = useCheckoutForm();
-
   const handlePhoneChange = (value: string, isPickup: boolean) => {
-    const formattedPhone = value.startsWith("+375") ? value : "+375" + value.replace(/^\+?375/, "");
-    if (formattedPhone.length > 13) return;
-
+    const formattedPhone = formatPhoneNumber(value);
     if (isPickup) {
       setPickupForm((prev) => ({ ...prev, phoneNumber: formattedPhone }));
       setPickupErrors((prev) => ({ ...prev, phoneNumber: undefined }));
@@ -42,17 +52,10 @@ export default function CheckoutForm({
     }
   };
 
-  const getInputClassName = (hasError?: boolean) => {
-    const base = "w-full bg-[#f3f5eb] border-2 border-on-background rounded-none focus:border-primary-container focus:border-[3px] focus:outline-none transition-all px-3 py-2 text-sm outline-none";
-    return hasError
-      ? `${base} border-red-500 focus:border-red-500`
-      : base;
-  };
-
   return (
     <div className="lg:col-span-7">
       <h2 className="font-heading-lg text-heading-lg mb-md">CHECKOUT</h2>
-
+      
       {/* Tabs */}
       <div className="flex mb-lg border-b-2 border-on-background">
         <button

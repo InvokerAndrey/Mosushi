@@ -1,12 +1,5 @@
 
-type CartLineItem = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-  lineTotal: number;
-};
+import type { CartLineItem } from "@/lib/types";
 
 type CartItemCardProps = {
   item: CartLineItem;
