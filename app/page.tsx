@@ -76,8 +76,9 @@ export default function HomePage() {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const headerOffset = 120;
-    const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+    // Use larger offset to show category name properly
+    const offset = 100;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
@@ -316,38 +317,38 @@ export default function HomePage() {
         {/* Mobile Menu */}
         <div className={`md:hidden overflow-hidden transition-all duration-300 border-t-2 border-zinc-900 ${mobileMenuOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <nav className="flex flex-col bg-[#f3f5eb] dark:bg-zinc-950">
-            <a 
-              className="px-8 py-4 text-primary-container border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200" 
+            <a
+              className="px-8 py-4 text-primary-container border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200"
               href="#sushi"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setTimeout(() => scrollToSection('sushi'), 300); }}
             >
               SUSHI
             </a>
-            <a 
-              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200" 
+            <a
+              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200"
               href="#sets"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setTimeout(() => scrollToSection('sets'), 300); }}
             >
               SETS
             </a>
-            <a 
-              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200" 
+            <a
+              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200"
               href="#sauces"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setTimeout(() => scrollToSection('sauces'), 300); }}
             >
               SAUCES
             </a>
-            <a 
-              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200" 
+            <a
+              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 border-b border-zinc-300 dark:border-zinc-700 hover:bg-zinc-900 hover:text-white transition-all duration-200"
               href="#drinks"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setTimeout(() => scrollToSection('drinks'), 300); }}
             >
               DRINKS
             </a>
-            <a 
-              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all duration-200" 
+            <a
+              className="px-8 py-4 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all duration-200"
               href="#checkout"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setTimeout(() => scrollToSection('checkout'), 300); }}
             >
               CHECKOUT
             </a>
