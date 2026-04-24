@@ -1,5 +1,3 @@
-import type { SushiMenuItem } from "@/data/sushiMenu";
-
 type CartLineItem = {
   id: string;
   name: string;
@@ -17,45 +15,44 @@ type CartItemCardProps = {
 
 export default function CartItemCard({ item, onIncrease, onDecrease }: CartItemCardProps) {
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="h-14 w-14 rounded-md border border-zinc-200 object-cover"
-        />
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-zinc-900">{item.name}</h2>
-          <p className="text-sm text-zinc-600">${item.price.toFixed(2)} each</p>
-        </div>
+    <div className="flex items-center gap-4 py-2 border-b border-dashed border-zinc-300">
+      <img 
+        src={item.image} 
+        alt={item.name} 
+        className="w-16 h-16 object-cover border border-on-background"
+      />
+      
+      <div className="flex-grow">
+        <h4 className="font-product-name text-sm">{item.name}</h4>
+        <span className="font-price text-sm text-primary-container">${item.price.toFixed(2)}</span>
       </div>
 
-      <div className="flex items-center justify-between gap-6">
-        <div className="flex items-center rounded-md border border-zinc-300">
-          <button
+      <div className="flex items-center gap-3">
+        <div className="flex border border-on-background">
+          <button 
             type="button"
             onClick={onDecrease}
-            className="px-4 py-2 text-lg font-bold text-zinc-700 transition hover:bg-zinc-100"
+            className="px-2 py-1 hover:bg-zinc-200 text-xs"
             aria-label={`Decrease ${item.name} quantity`}
           >
             -
           </button>
-          <span className="min-w-10 px-2 text-center text-sm font-semibold text-zinc-800">
+          <span className="px-3 py-1 font-product-name text-xs border-l border-r border-on-background">
             {item.quantity}
           </span>
-          <button
+          <button 
             type="button"
             onClick={onIncrease}
-            className="px-4 py-2 text-lg font-bold text-zinc-700 transition hover:bg-zinc-100"
+            className="px-2 py-1 hover:bg-zinc-200 text-xs"
             aria-label={`Increase ${item.name} quantity`}
           >
             +
           </button>
         </div>
-        <p className="min-w-24 text-right text-base font-bold text-zinc-900">
+        <span className="font-price text-sm font-bold text-primary-container min-w-[50px] text-right">
           ${item.lineTotal.toFixed(2)}
-        </p>
+        </span>
       </div>
-    </article>
+    </div>
   );
 }

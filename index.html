@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en" style="scroll-behavior: smooth;"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MoreSushi - Premium Sushi Delivery</title>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#676a62",
+                        "on-background": "#161c27",
+                        "on-primary-fixed-variant": "#920212",
+                        "on-tertiary-fixed-variant": "#454841",
+                        "on-secondary-container": "#167249",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f9f9ff",
+                        "surface": "#f9f9ff",
+                        "on-error": "#ffffff",
+                        "background": "#f9f9ff",
+                        "on-surface-variant": "#5a403e",
+                        "on-tertiary-fixed": "#191d17",
+                        "surface-container": "#e8eeff",
+                        "secondary-fixed-dim": "#83d8a6",
+                        "surface-container-highest": "#dde2f3",
+                        "secondary": "#0a6c44",
+                        "primary-fixed-dim": "#ffb3ad",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#e8ebe1",
+                        "surface-tint": "#b52426",
+                        "on-primary-container": "#ffe4e1",
+                        "on-secondary-fixed": "#002111",
+                        "primary-fixed": "#ffdad6",
+                        "surface-container-low": "#f1f3ff",
+                        "primary-container": "#c53030",
+                        "secondary-fixed": "#9ff5c1",
+                        "outline-variant": "#e2bebb",
+                        "on-surface": "#161c27",
+                        "inverse-on-surface": "#ecf0ff",
+                        "tertiary-fixed": "#e1e3da",
+                        "on-secondary-fixed-variant": "#005231",
+                        "outline": "#8e706d",
+                        "surface-variant": "#dde2f3",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e3e8f9",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#a2141b",
+                        "tertiary": "#4f524b",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#9ff5c1",
+                        "on-primary-fixed": "#410003",
+                        "tertiary-fixed-dim": "#c5c7be",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2a303d",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d4daea",
+                        "inverse-primary": "#ffb3ad"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "16px",
+                        "unit": "4px",
+                        "margin": "32px",
+                        "xl": "80px",
+                        "xs": "8px",
+                        "lg": "48px",
+                        "gutter": "24px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "ingredient-list": ["Epilogue"],
+                        "heading-xl": ["Epilogue"],
+                        "product-name": ["Epilogue"],
+                        "price": ["Epilogue"],
+                        "heading-lg": ["Epilogue"],
+                        "body-regular": ["Epilogue"],
+                        "label-caps": ["Epilogue"]
+                    },
+                    "fontSize": {
+                        "ingredient-list": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "heading-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "product-name": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "price": ["18px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "heading-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-regular": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f3f5eb;
+        }
+        .bento-card {
+            border: 2px solid #161c27;
+            background-color: transparent;
+        }
+        .btn-primary {
+            background-color: #C53030;
+            color: white;
+            border-bottom: 2px solid #161c27;
+            border-radius: 0;
+        }
+        .input-field {
+            background-color: #f3f5eb;
+            border: 2px solid #161c27;
+            border-radius: 0;
+        }
+        .input-field:focus {
+            border-color: #C53030;
+            border-width: 3px;
+            outline: none;
+        }
+        #main-header.scrolled #header-inner {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        #main-header.scrolled #header-title {
+            display: none;
+        }
+        #main-header.scrolled #header-contact {
+            display: none !important;
+        }
+        @media (min-width: 768px) {
+            #main-header.scrolled #header-nav {
+                margin: 0 auto;
+            }
+            #main-header.scrolled #header-cart-wrapper {
+                position: absolute;
+                right: 2rem;
+            }
+        }
+    </style>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.getElementById('main-header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+</head>
+<body class="text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-[#f3f5eb] dark:bg-zinc-950 font-['Epilogue'] uppercase tracking-widest text-sm font-bold sticky top-0 w-full z-50 border-b-2 border-zinc-900 dark:border-zinc-100 transition-all duration-300" id="main-header">
+<div class="max-w-[1200px] mx-auto flex items-center justify-between px-8 py-6 transition-all duration-300 relative" id="header-inner">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-zinc-900 dark:text-white">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+<div class="text-3xl font-black italic tracking-tighter text-zinc-900 dark:text-white" id="header-title">
+                MoreSushi
+            </div>
+</div>
+<nav class="hidden md:flex gap-8 transition-all duration-300" id="header-nav">
+<a class="text-[#C53030] border-b-2 border-[#C53030] pb-1 translate-y-0.5 active:border-b-0 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all duration-200" href="#sushi">SUSHI</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all duration-200" href="#sets">SETS</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all duration-200" href="#sauces">SAUCES</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-all duration-200" href="#drinks">DRINKS</a>
+</nav>
+<div class="flex items-center gap-6 transition-all duration-300" id="header-cart-wrapper">
+<div class="hidden lg:flex items-center gap-6" id="header-contact">
+<div class="flex flex-col text-right font-body-regular text-body-regular normal-case">
+<span class="font-bold">11:00 - 23:00</span>
+<a class="text-xs underline hover:text-[#C53030]" href="#">Delivery Info</a>
+</div>
+<div class="flex items-center gap-2 font-body-regular text-body-regular">
+<span class="material-symbols-outlined">phone</span>
+<span class="font-bold">+1 234 567 8900</span>
+</div>
+</div>
+<a class="flex items-center gap-2 btn-primary px-4 py-2 font-label-caps text-label-caps hover:opacity-90" href="#checkout">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="hidden sm:inline">Cart (3) - $45.00</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow max-w-[1200px] mx-auto w-full px-8 py-lg">
+<!-- Bento Grid for Sushi -->
+<section class="mb-xl" id="sushi">
+<h2 class="font-heading-lg text-heading-lg mb-lg border-b-2 border-on-background pb-xs inline-block">SUSHI</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Product Card 1 -->
+<div class="bento-card p-md flex flex-col h-full hover:translate-y-[-4px] transition-transform duration-200">
+<div class="mb-md bg-white border-2 border-on-background overflow-hidden aspect-square">
+<img alt="High-quality close-up of a premium salmon nigiri on a minimalist white ceramic plate" class="w-full h-full object-cover" data-alt="High-quality close-up of a premium salmon nigiri on a minimalist white ceramic plate with dramatic studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGa8T_g6zbRLX18Jlw0kZAmg9xTKwdNIVaKF6ck8jXaD2I01O9JwlSCGcsPNk_D5tXbBe2jxsxVooCh28_wo-GQiICnyNQkj8D__i45hVALFhYsUBjLqQGIixXEdXo_uB2e1JEDz2u64IA8XsMCBOz_USECvI2JXdp_9gYUEj7lCFNTflmgmNN7RyvC4DS_zFX9Vdg1L9w1J76K8XCYNF7n7Qq64KuAa5b3Cc0LDLCRCxw9dZdu-ggkdtD4MwCAgcicnWM3Ejvgm0"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-product-name text-product-name">Salmon Nigiri</h3>
+<div class="border border-[#2F855A] text-[#2F855A] px-2 py-1 font-label-caps text-label-caps uppercase">Classic</div>
+</div>
+<p class="font-ingredient-list text-ingredient-list text-tertiary-container mb-md">Premium fresh salmon, sushi rice, subtle wasabi hint.</p>
+</div>
+<div class="flex justify-between items-end mt-auto pt-md border-t border-on-background border-dashed">
+<span class="font-price text-price text-primary-container">$6.00</span>
+<button class="btn-primary px-6 py-2 font-label-caps text-label-caps uppercase">Add to Cart</button>
+</div>
+</div>
+<!-- Product Card 2 (Active State Example) -->
+<div class="bento-card p-md flex flex-col h-full hover:translate-y-[-4px] transition-transform duration-200">
+<div class="mb-md bg-white border-2 border-on-background overflow-hidden aspect-square">
+<img alt="Premium spicy tuna roll cut into precise pieces on a stark background" class="w-full h-full object-cover" data-alt="Premium spicy tuna roll cut into precise pieces on a stark background, highlighting the fresh tuna and vibrant sauces" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzrIGLIanNX2gN8qPE8UH760IJxmoglST1FPpB1Tw5T2Xj0ufa2-0VxrrbyebRwLSt1MgDAtPtZX8ib00Cdyn2dL8D8b0DH4jGTXmSasMe431GsPcKlONl8A5CbA8hWqo3g9qPo9zT7IfsQBuPFJ2zBL7IA31hPaa-tgrH4MFL1FjJcp1asKl2GUzTrbspkR_epUEjnFk6G73fD1mg1zLENWdSoEs_aNi8vYcLlcz59Dq1EUD4mCFyoxfqlDxtAqQdZWbO3VrjllA"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-product-name text-product-name">Spicy Tuna Roll</h3>
+<div class="border border-[#C53030] text-[#C53030] px-2 py-1 font-label-caps text-label-caps uppercase">Spicy</div>
+</div>
+<p class="font-ingredient-list text-ingredient-list text-tertiary-container mb-md">Yellowfin tuna, spicy mayo, cucumber, sesame seeds.</p>
+</div>
+<div class="flex justify-between items-end mt-auto pt-md border-t border-on-background border-dashed">
+<span class="font-price text-price text-primary-container">$14.00</span>
+<div class="flex border-2 border-on-background">
+<button class="px-3 py-1 hover:bg-zinc-200 font-bold">-</button>
+<span class="px-4 py-1 font-product-name border-l-2 border-r-2 border-on-background">2</span>
+<button class="px-3 py-1 hover:bg-zinc-200 font-bold">+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bento-card p-md flex flex-col h-full hover:translate-y-[-4px] transition-transform duration-200">
+<div class="mb-md bg-white border-2 border-on-background overflow-hidden aspect-square">
+<img alt="Elegant dragon roll sushi arranged perfectly with avocado topping" class="w-full h-full object-cover" data-alt="Elegant dragon roll sushi arranged perfectly with vibrant green avocado topping and eel sauce drizzle on white canvas" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTl9jsYqeKooY7-YCRhH_mLaDbFTiCfuZkYZC8zRbJk-V4Y0uEhfC1_e5eon8MdBdx6y3WK18DsTWEwXYxOGottEvVbXpj0rS2rhgrb16rUoGCanDARnJEx-hlPq7IABBz5kpXpBMepcxONg4mUFwmRYwdT0AvLKSPGCXYo4rwlx-QIeYGlTgKK7uEaYs1OupikXcsX3kU_PJjUUKrZc2bTUDyC5rPXar39LLG7pBvMNNYSGigndAaGhsXp4khklmCz2f-cf9uDW0"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-product-name text-product-name">Dragon Roll</h3>
+</div>
+<p class="font-ingredient-list text-ingredient-list text-tertiary-container mb-md">Eel, cucumber, topped with avocado and unagi sauce.</p>
+</div>
+<div class="flex justify-between items-end mt-auto pt-md border-t border-on-background border-dashed">
+<span class="font-price text-price text-primary-container">$18.00</span>
+<button class="btn-primary px-6 py-2 font-label-caps text-label-caps uppercase">Add to Cart</button>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-t-2 border-on-background mb-xl"/>
+<!-- Checkout / Cart Section -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-xl" id="checkout">
+<!-- Order Form -->
+<div class="lg:col-span-7">
+<h2 class="font-heading-lg text-heading-lg mb-md">CHECKOUT</h2>
+<!-- Tabs -->
+<div class="flex mb-lg border-b-2 border-on-background">
+<button class="px-8 py-4 font-label-caps uppercase text-primary-container border-b-4 border-primary-container -mb-[3px] bg-white text-body-regular">Delivery</button>
+<button class="px-8 py-4 font-label-caps uppercase text-tertiary-container hover:text-on-background text-body-regular">Pickup</button>
+</div>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Name</label>
+<input class="input-field p-3 font-body-regular" placeholder="John Doe" type="text"/>
+</div>
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Phone</label>
+<input class="input-field p-3 font-body-regular" placeholder="+1 (___) ___-____" type="tel"/>
+</div>
+</div>
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Street</label>
+<input class="input-field p-3 font-body-regular" placeholder="Main Street" type="text"/>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">House #</label>
+<input class="input-field p-3 font-body-regular" type="text"/>
+</div>
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Apt</label>
+<input class="input-field p-3 font-body-regular" type="text"/>
+</div>
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Entrance</label>
+<input class="input-field p-3 font-body-regular" type="text"/>
+</div>
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Floor</label>
+<input class="input-field p-3 font-body-regular" type="text"/>
+</div>
+</div>
+<div class="flex flex-col border-t-2 border-dashed border-on-background pt-6 mt-6">
+<label class="font-label-caps text-label-caps uppercase mb-4">Payment Method</label>
+<div class="flex gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-5 h-5 text-[#C53030] focus:ring-[#C53030] border-2 border-on-background bg-transparent" name="payment" type="radio"/>
+<span class="font-body-regular">Cash</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-5 h-5 text-[#C53030] focus:ring-[#C53030] border-2 border-on-background bg-transparent" name="payment" type="radio"/>
+<span class="font-body-regular">Card</span>
+</label>
+</div>
+<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps uppercase mb-2">Change from</label>
+<input class="input-field p-3 font-body-regular" placeholder="$" type="text"/>
+</div>
+<label class="flex items-center gap-2 cursor-pointer h-[52px] pb-3">
+<input class="w-5 h-5 text-[#C53030] focus:ring-[#C53030] border-2 border-on-background rounded-none bg-transparent" type="checkbox"/>
+<span class="font-body-regular">No change required</span>
+</label>
+</div>
+</div>
+<div class="flex flex-col pt-2">
+<label class="font-label-caps text-label-caps uppercase mb-2">Order Comment</label>
+<textarea class="input-field p-3 font-body-regular min-h-[100px]" placeholder="Any special requests?"></textarea>
+</div>
+</form>
+</div>
+<!-- Cart Summary Sidebar -->
+<div class="lg:col-span-5 mt-lg lg:mt-0">
+<div class="bento-card p-md sticky top-32 bg-white">
+<h3 class="font-heading-lg text-heading-lg mb-md">YOUR ORDER</h3>
+<!-- Cart Items -->
+<div class="space-y-4 mb-md">
+<div class="flex items-center gap-4 py-2 border-b border-dashed border-zinc-300"><img alt="Salmon Nigiri thumbnail" class="w-16 h-16 object-cover border border-on-background" data-alt="Small thumbnail image of Salmon Nigiri on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY0NCnmKK6byHm146mFgse_JKYxPW8Qy5GsjJq9XN7rMmwHsxHMMYRUuvBFiKxigpCimZbdrF75wuKzU-RaT_N37jfQ6rkEPV1DiCpKFoXv2NcePvMQu5PHL4AsYCpDme0-EomBKkrOYHiOdB6YcSH0rXE8U5n-0zed-JyKjZLviwok3bVRic-MdwEL7v8rBkDl-ngxKX1rJyNiNuuyeMcVHmUDPzqTI8MXi4Kxbh3UQAa2_PVHHhDjSdrqBJwclrZ388w5sKWH1s"/>
+<div class="flex-grow">
+<h4 class="font-product-name text-sm">Salmon Nigiri</h4>
+<span class="font-price text-sm text-primary-container">$6.00</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex border border-on-background">
+<button class="px-2 py-1 hover:bg-zinc-200 text-xs">-</button>
+<span class="px-3 py-1 font-product-name text-xs border-l border-r border-on-background">1</span>
+<button class="px-2 py-1 hover:bg-zinc-200 text-xs">+</button>
+</div>
+<span class="font-price text-sm font-bold text-primary-container min-w-[50px] text-right">$6.00</span>
+</div></div>
+<div class="flex items-center gap-4 py-2 border-b border-dashed border-zinc-300"><img alt="Spicy Tuna Roll thumbnail" class="w-16 h-16 object-cover border border-on-background" data-alt="Small thumbnail image of Spicy Tuna Roll on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgAgHd1EZwA_HxEasfTG7lK1fbWuVlmazuwrATAem5SX8hrGrm0u8YhoE6Rx14xG4cdbY0P8PYK2X6bnVHXRDBP1Htn5Ls6b3jCNpV62R33l2Ab72plnpOBH_WdmhbIUrDFoeeECMGhln3V1TQHPbrit22wVbMiBg8Vj768T19KdqeaVohYLa-nSa3lJDxS8Nkwyes1ly91oiBZdEUFn3NQ4BHY0rVqsY_RqtniVs0N9xBHAGNpoDJcv0lkFwjdZ-jS5-EbsoB4lY"/>
+<div class="flex-grow">
+<h4 class="font-product-name text-sm">Spicy Tuna Roll</h4>
+<span class="font-price text-sm text-primary-container">$14.00</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex border border-on-background">
+<button class="px-2 py-1 hover:bg-zinc-200 text-xs">-</button>
+<span class="px-3 py-1 font-product-name text-xs border-l border-r border-on-background">2</span>
+<button class="px-2 py-1 hover:bg-zinc-200 text-xs">+</button>
+</div>
+<span class="font-price text-sm font-bold text-primary-container min-w-[50px] text-right">$28.00</span>
+</div></div>
+</div>
+<!-- Totals -->
+<div class="pt-4 space-y-2 mb-lg">
+<div class="flex justify-between font-body-regular text-tertiary-container">
+<span>Subtotal</span>
+<span>$34.00</span>
+</div>
+<div class="flex justify-between font-body-regular text-tertiary-container">
+<span>Delivery</span>
+<span>$0.00</span>
+</div>
+<div class="flex justify-between font-price text-xl mt-4 pt-4 border-t-2 border-on-background">
+<span>Total</span>
+<span class="text-primary-container">$34.00</span>
+</div>
+</div>
+<button class="btn-primary w-full py-4 font-heading-lg text-xl uppercase tracking-wider">Place Order</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-zinc-900 dark:bg-black text-zinc-100 font-['Epilogue'] text-xs font-light tracking-wider w-full mt-20 border-t-4 border-zinc-900">
+<div class="max-w-[1200px] mx-auto px-8 py-16 flex flex-col md:flex-row justify-between items-start gap-8">
+<div class="text-xl font-bold text-white mb-4 md:mb-0">
+                MORESUSHI
+            </div>
+<div class="flex flex-col md:flex-row gap-8 lg:gap-16">
+<div class="flex flex-col gap-2">
+<span class="text-zinc-400">Working Hours: 11:00 - 23:00</span>
+</div>
+<div class="flex flex-col gap-2">
+<a class="text-zinc-400 hover:text-[#C53030] transition-colors" href="#">Sustainability</a>
+<a class="text-zinc-400 hover:text-[#C53030] transition-colors" href="#">Terms of Service</a>
+<a class="text-zinc-400 hover:text-[#C53030] transition-colors" href="#">Privacy Policy</a>
+</div>
+</div>
+<div class="mt-8 md:mt-0 text-zinc-500">
+                © 2024 MORESUSHI ATELIER. PRECISION IN EVERY ROLL.
+            </div>
+</div>
+</footer>
+</body></html>
