@@ -5,7 +5,6 @@ import {
   type CheckoutTab,
   type DeliveryFormState,
   type PickupFormState,
-  type PersistedCheckoutForm,
   createEmptyDeliveryForm,
   createEmptyPickupForm,
   readCheckoutFormFromStorage,
@@ -14,32 +13,26 @@ import {
 } from "@/lib/validations";
 
 export function useCheckoutForm() {
-  const [activeTab, setActiveTab] = useState<CheckoutTab>("pickup");
+  const [activeTab, setActiveTab] = useState<CheckoutTab>("delivery");
   const [pickupForm, setPickupForm] = useState<PickupFormState>(createEmptyPickupForm());
   const [deliveryForm, setDeliveryForm] = useState<DeliveryFormState>(createEmptyDeliveryForm());
   const [isFormReady, setIsFormReady] = useState(false);
 
-  // Load form data from storage on mount
+  // Load form data from storage on mount, merging with defaults for forward compat
   useEffect(() => {
     const savedForm = readCheckoutFormFromStorage();
     if (savedForm) {
       setActiveTab(savedForm.activeTab);
-      setPickupForm(savedForm.pickupForm);
-      setDeliveryForm(savedForm.deliveryForm);
+      setPickupForm({ ...createEmptyPickupForm(), ...savedForm.pickupForm });
+      setDeliveryForm({ ...createEmptyDeliveryForm(), ...savedForm.deliveryForm });
     }
     setIsFormReady(true);
   }, []);
 
   // Persist form data to storage on every change
   useEffect(() => {
-    if (!isFormReady) {
-      return;
-    }
-    writeCheckoutFormToStorage({
-      activeTab,
-      pickupForm,
-      deliveryForm
-    });
+    if (!isFormReady) return;
+    writeCheckoutFormToStorage({ activeTab, pickupForm, deliveryForm });
   }, [activeTab, pickupForm, deliveryForm, isFormReady]);
 
   const resetForms = () => {

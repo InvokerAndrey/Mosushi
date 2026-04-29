@@ -9,12 +9,14 @@ import {
 
 // Type definitions
 export type CheckoutTab = "pickup" | "delivery";
-
+export type OrderTimeType = "asap" | "specific";
 export type DeliveryPaymentMethod = "CASH" | "CARD" | "";
 
 export type PickupFormState = {
   name: string;
   phoneNumber: string;
+  orderTime: OrderTimeType;
+  scheduledTime: string;
   comment: string;
 };
 
@@ -35,6 +37,8 @@ export type DeliveryFormState = {
   comment: string;
   changeAmount: string;
   noChange: boolean;
+  orderTime: OrderTimeType;
+  scheduledTime: string;
 };
 
 export type PersistedCheckoutForm = {
@@ -51,6 +55,8 @@ export type DeliveryFormErrors = Partial<Record<keyof DeliveryFormState, string>
 export const createEmptyPickupForm = (): PickupFormState => ({
   name: "",
   phoneNumber: PHONE_PREFIX,
+  orderTime: "asap",
+  scheduledTime: "",
   comment: ""
 });
 
@@ -68,7 +74,9 @@ export const createEmptyDeliveryForm = (): DeliveryFormState => ({
   paymentMethod: "" as DeliveryPaymentMethod,
   comment: "",
   changeAmount: "",
-  noChange: false
+  noChange: false,
+  orderTime: "asap",
+  scheduledTime: ""
 });
 
 // Validation functions
@@ -76,20 +84,24 @@ export function validatePickupForm(form: PickupFormState): PickupFormErrors {
   const errors: PickupFormErrors = {};
 
   if (!form.name.trim()) {
-    errors.name = "Name is required.";
+    errors.name = "Введите имя.";
   } else if (form.name.trim().length > MAX_NAME_LENGTH) {
-    errors.name = `Name must be at most ${MAX_NAME_LENGTH} characters.`;
+    errors.name = `Имя не должно превышать ${MAX_NAME_LENGTH} символов.`;
   }
 
   const phone = form.phoneNumber.trim();
   if (phone.length <= PHONE_PREFIX.length) {
-    errors.phoneNumber = "Phone number is required.";
+    errors.phoneNumber = "Введите номер телефона.";
   } else if (!PHONE_REGEX.test(phone)) {
-    errors.phoneNumber = "Phone must start with +375 and be 13 characters long.";
+    errors.phoneNumber = "Номер должен начинаться с +375 и содержать 13 символов.";
+  }
+
+  if (form.orderTime === "specific" && !form.scheduledTime) {
+    errors.scheduledTime = "Выберите время самовывоза.";
   }
 
   if (form.comment.trim().length > MAX_COMMENT_LENGTH) {
-    errors.comment = `Comment must be at most ${MAX_COMMENT_LENGTH} characters.`;
+    errors.comment = `Комментарий не должен превышать ${MAX_COMMENT_LENGTH} символов.`;
   }
 
   return errors;
@@ -99,62 +111,66 @@ export function validateDeliveryForm(form: DeliveryFormState): DeliveryFormError
   const errors: DeliveryFormErrors = {};
 
   if (!form.name.trim()) {
-    errors.name = "Name is required.";
+    errors.name = "Введите имя.";
   } else if (form.name.trim().length > MAX_NAME_LENGTH) {
-    errors.name = `Name must be at most ${MAX_NAME_LENGTH} characters.`;
+    errors.name = `Имя не должно превышать ${MAX_NAME_LENGTH} символов.`;
   }
 
   const phone = form.phoneNumber.trim();
   if (phone.length <= PHONE_PREFIX.length) {
-    errors.phoneNumber = "Phone number is required.";
+    errors.phoneNumber = "Введите номер телефона.";
   } else if (!PHONE_REGEX.test(phone)) {
-    errors.phoneNumber = "Phone must start with +375 and be 13 characters long.";
+    errors.phoneNumber = "Номер должен начинаться с +375 и содержать 13 символов.";
   }
 
   const address = form.address;
 
   if (!address.street.trim()) {
-    errors.street = "Street is required.";
+    errors.street = "Введите улицу.";
   } else if (address.street.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.street = `Street must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.street = `Улица не должна превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (!address.houseNumber.trim()) {
-    errors.houseNumber = "House number is required.";
+    errors.houseNumber = "Введите номер дома.";
   } else if (address.houseNumber.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.houseNumber = `House number must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.houseNumber = `Номер дома не должен превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (!address.apartment.trim()) {
-    errors.apartment = "Apartment is required.";
+    errors.apartment = "Введите номер квартиры.";
   } else if (address.apartment.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.apartment = `Apartment must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.apartment = `Квартира не должна превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (address.entrance.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.entrance = `Entrance must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.entrance = `Подъезд не должен превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (address.floor.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.floor = `Floor must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.floor = `Этаж не должен превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (address.intercom.trim().length > MAX_ADDRESS_FIELD_LENGTH) {
-    errors.intercom = `Intercom must be at most ${MAX_ADDRESS_FIELD_LENGTH} characters.`;
+    errors.intercom = `Домофон не должен превышать ${MAX_ADDRESS_FIELD_LENGTH} символов.`;
   }
 
   if (!form.paymentMethod) {
-    errors.paymentMethod = "Payment method is required.";
+    errors.paymentMethod = "Выберите способ оплаты.";
   }
 
   if (form.paymentMethod === "CASH" && !form.noChange) {
     if (!form.changeAmount.trim()) {
-      errors.changeAmount = "Change amount is required for cash payment.";
+      errors.changeAmount = "Укажите сумму для сдачи.";
     }
   }
 
+  if (form.orderTime === "specific" && !form.scheduledTime) {
+    errors.scheduledTime = "Выберите время доставки.";
+  }
+
   if (form.comment.trim().length > MAX_COMMENT_LENGTH) {
-    errors.comment = `Comment must be at most ${MAX_COMMENT_LENGTH} characters.`;
+    errors.comment = `Комментарий не должен превышать ${MAX_COMMENT_LENGTH} символов.`;
   }
 
   return errors;
@@ -194,7 +210,7 @@ export function formatPhoneNumber(value: string): string {
 }
 
 export function formatDeliveryAddress(address: DeliveryAddress): string {
-  return `${address.street}, ${address.houseNumber}${address.apartment ? `, apt ${address.apartment}` : ""}${address.entrance ? `, entrance ${address.entrance}` : ""}${address.floor ? `, floor ${address.floor}` : ""}${address.intercom ? `, intercom ${address.intercom}` : ""}`;
+  return `${address.street}, ${address.houseNumber}${address.apartment ? `, квартира ${address.apartment}` : ""}${address.entrance ? `, подъезд ${address.entrance}` : ""}${address.floor ? `, этаж ${address.floor}` : ""}${address.intercom ? `, домофон ${address.intercom}` : ""}`;
 }
 
 export function buildDeliveryComment(changeInfo: string, userComment: string): string {

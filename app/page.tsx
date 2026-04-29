@@ -5,12 +5,21 @@ import { sushiMenuItems } from "@/data/sushiMenu";
 import { readCartFromStorage, writeCartToStorage } from "@/lib/cart";
 import type { CartState } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
-import { validatePickupForm, validateDeliveryForm, formatDeliveryAddress, buildDeliveryComment, buildChangeInfo } from "@/lib/validations";
+import {
+  validatePickupForm,
+  validateDeliveryForm,
+  formatDeliveryAddress
+} from "@/lib/validations";
 
 import Header from "@/components/Header";
 import MenuSection from "@/components/MenuSection";
 import CheckoutForm from "@/components/CheckoutForm";
 import CartSummary from "@/components/CartSummary";
+
+const DELIVERY_FEE = 6;
+const FREE_DELIVERY_THRESHOLD = 40;
+const INSTAGRAM_URL =
+  "https://www.instagram.com/anastasiya.morochko?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
 export default function HomePage() {
   const [cartItems, setCartItems] = useState<CartState>({});
@@ -68,7 +77,7 @@ export default function HomePage() {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const offset = 100;
+    const offset = 80;
     const top = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: "smooth" });
   };
@@ -103,13 +112,20 @@ export default function HomePage() {
       .filter((item) => item !== null);
   }, [cartItems]);
 
-  const totalPrice = useMemo(
+  const subtotalPrice = useMemo(
     () => lineItems.reduce((sum, item) => sum + item.lineTotal, 0),
     [lineItems]
   );
 
+  const deliveryFee = useMemo(() => {
+    if (activeTab !== "delivery") return 0;
+    return subtotalPrice >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  }, [activeTab, subtotalPrice]);
+
+  const grandTotal = useMemo(() => subtotalPrice + deliveryFee, [subtotalPrice, deliveryFee]);
+
   const cartCount = useMemo(
-    () => Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0),
+    () => Object.values(cartItems).reduce((sum, qty) => sum + qty, 0),
     [cartItems]
   );
 
@@ -117,20 +133,17 @@ export default function HomePage() {
   const handleAddToCart = (itemId: string) => {
     setSuccessMessage("");
     setRequestError("");
-    setCartItems((prev) => ({
-      ...prev,
-      [itemId]: (prev[itemId] ?? 0) + 1
-    }));
+    setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] ?? 0) + 1 }));
   };
 
   const handleRemoveFromCart = (itemId: string) => {
     setCartItems((prev) => {
-      const currentQuantity = prev[itemId] ?? 0;
-      if (currentQuantity <= 1) {
+      const currentQty = prev[itemId] ?? 0;
+      if (currentQty <= 1) {
         const { [itemId]: _removed, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [itemId]: currentQuantity - 1 };
+      return { ...prev, [itemId]: currentQty - 1 };
     });
   };
 
@@ -139,7 +152,7 @@ export default function HomePage() {
     if (isSubmitting) return;
 
     if (lineItems.length === 0) {
-      setRequestError("Your cart is empty. Add some items before placing an order.");
+      setRequestError("Ваша корзина пуста. Добавьте товары перед оформлением заказа.");
       return;
     }
 
@@ -161,33 +174,33 @@ export default function HomePage() {
       return;
     }
 
-    setRequestError("");
-    setSuccessMessage("");
     setIsSubmitting(true);
 
-    const changeInfo = buildChangeInfo(
-      deliveryForm.paymentMethod,
-      deliveryForm.noChange,
-      deliveryForm.changeAmount
-    );
-
     const addressString = formatDeliveryAddress(deliveryForm.address);
-    const deliveryComment = buildDeliveryComment(changeInfo, deliveryForm.comment);
 
     const requestBody = {
       orderType: activeTab,
-      totalPrice,
+      totalPrice: grandTotal,
       cartItems,
-      pickup: pickupForm,
+      pickup: {
+        name: pickupForm.name,
+        phoneNumber: pickupForm.phoneNumber,
+        orderTime: pickupForm.orderTime,
+        scheduledTime: pickupForm.scheduledTime,
+        comment: pickupForm.comment
+      },
       delivery: {
         name: deliveryForm.name,
         phoneNumber: deliveryForm.phoneNumber,
         address: addressString,
         paymentMethod: deliveryForm.paymentMethod,
-        comment: deliveryComment
+        changeAmount: deliveryForm.changeAmount,
+        noChange: deliveryForm.noChange,
+        orderTime: deliveryForm.orderTime,
+        scheduledTime: deliveryForm.scheduledTime,
+        comment: deliveryForm.comment
       }
     };
-    console.log("[Order] Request body:", requestBody);
 
     try {
       const response = await fetch("/api/order", {
@@ -197,20 +210,19 @@ export default function HomePage() {
       });
 
       const result = (await response.json()) as { message?: string };
-      console.log("[Order] API response:", response.status, result);
       if (!response.ok) {
-        setRequestError(result.message ?? "Failed to place order.");
+        setRequestError(result.message ?? "Не удалось оформить заказ.");
         return;
       }
 
-      setSuccessMessage("Order completed successfully! We will contact you soon.");
+      setSuccessMessage("Заказ успешно оформлен! Мы скоро свяжемся с вами.");
       setCartItems({});
       setPickupErrors({});
       setDeliveryErrors({});
       resetForms();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
-      setRequestError("Something went wrong while sending the order.");
+      setRequestError("Произошла ошибка при отправке заказа.");
     } finally {
       setIsSubmitting(false);
     }
@@ -220,7 +232,7 @@ export default function HomePage() {
     <>
       <Header
         cartCount={cartCount}
-        totalPrice={totalPrice}
+        totalPrice={grandTotal}
         activeSection={activeSection}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
@@ -242,10 +254,10 @@ export default function HomePage() {
         {/* Hero */}
         <section className="mb-10 pt-6">
           <h1 className="font-bold text-text text-4xl md:text-5xl tracking-tight mb-3">
-            Fresh sushi made every day.
+            Свежие суши каждый день.
           </h1>
           <p className="text-base text-secondary max-w-2xl leading-relaxed">
-            Explore our handcrafted menu with premium ingredients and balanced flavors.
+            Ручная работа, премиальные ингредиенты, сбалансированный вкус.
           </p>
         </section>
 
@@ -253,53 +265,62 @@ export default function HomePage() {
         <MenuSection
           ref={sushiRef}
           id="sushi"
-          title="Sushi"
+          title="Суши"
           items={sushiMenuItems.filter((i) => i.category === "sushi")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
-
         <hr className="border-t border-secondary/20 mb-4" />
 
         <MenuSection
           ref={setsRef}
           id="sets"
-          title="Sets"
+          title="Сеты"
           items={sushiMenuItems.filter((i) => i.category === "sets")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
-
         <hr className="border-t border-secondary/20 mb-4" />
 
         <MenuSection
           ref={saucesRef}
           id="sauces"
-          title="Sauces"
+          title="Соусы"
           items={sushiMenuItems.filter((i) => i.category === "sauces")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
-
         <hr className="border-t border-secondary/20 mb-4" />
 
         <MenuSection
           ref={drinksRef}
           id="drinks"
-          title="Drinks"
+          title="Напитки"
           items={sushiMenuItems.filter((i) => i.category === "drinks")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
-
         <hr className="border-t border-secondary/20 mb-10" />
 
-        {/* Checkout section */}
+        {/* Checkout section — CartSummary LEFT on desktop, first on mobile */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16" id="checkout">
+          {/* Order summary — col 5, left on desktop, top on mobile */}
+          <div className="lg:col-span-5">
+            <CartSummary
+              lineItems={lineItems}
+              subtotalPrice={subtotalPrice}
+              deliveryFee={deliveryFee}
+              activeTab={activeTab}
+              onIncreaseItem={handleAddToCart}
+              onDecreaseItem={handleRemoveFromCart}
+            />
+          </div>
+
+          {/* Checkout form — col 7, right on desktop, bottom on mobile */}
           <CheckoutForm
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -315,39 +336,38 @@ export default function HomePage() {
             isSubmitting={isSubmitting}
             onSubmitOrder={handleSubmitOrder}
           />
-
-          <div className="lg:col-span-5 mt-8 lg:mt-0">
-            <CartSummary
-              lineItems={lineItems}
-              totalPrice={totalPrice}
-              requestError={requestError}
-              isSubmitting={isSubmitting}
-              onIncreaseItem={handleAddToCart}
-              onDecreaseItem={handleRemoveFromCart}
-              onSubmitOrder={handleSubmitOrder}
-            />
-          </div>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="bg-primary text-background w-full mt-10">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-14 flex flex-col md:flex-row justify-between items-start gap-8">
-          <div className="text-xl font-bold tracking-widest">
-            MORESUSHI
-          </div>
+          <div className="text-xl font-bold tracking-widest">SushiMō</div>
+
           <div className="flex flex-col md:flex-row gap-8 lg:gap-16 text-sm">
             <div className="flex flex-col gap-2">
-              <span className="text-background/60">Working Hours: 11:00 – 23:00</span>
+              <span className="text-background/60">Часы работы: 11:00 – 23:00</span>
             </div>
             <div className="flex flex-col gap-2">
-              <a className="text-background/60 hover:text-accent transition-colors" href="#">Sustainability</a>
-              <a className="text-background/60 hover:text-accent transition-colors" href="#">Terms of Service</a>
-              <a className="text-background/60 hover:text-accent transition-colors" href="#">Privacy Policy</a>
+              <a className="text-background/60 hover:text-accent transition-colors" href="/delivery-info">
+                Условия доставки
+              </a>
+              <a className="text-background/60 hover:text-accent transition-colors" href="#">
+                Политика конфиденциальности
+              </a>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-background/60 hover:text-accent transition-colors"
+              >
+                Наш инстаграм
+              </a>
             </div>
           </div>
+
           <div className="text-background/40 text-xs">
-            © 2024 MORESUSHI. PRECISION IN EVERY ROLL.
+            © 2024 SushiMō. PRECISION IN EVERY ROLL.
           </div>
         </div>
       </footer>

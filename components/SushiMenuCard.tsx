@@ -43,7 +43,7 @@ export default function SushiMenuCard({
               onClick={() => onAddToCart(item.id)}
               className="bg-accent text-white hover:bg-accent-dark transition-colors px-5 py-2 rounded-lg font-semibold text-sm cursor-pointer"
             >
-              Add to Cart
+              Добавить
             </button>
           ) : (
             <div className="flex items-center border border-secondary/40 rounded-lg overflow-hidden">
