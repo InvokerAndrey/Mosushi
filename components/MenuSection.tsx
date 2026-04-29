@@ -17,11 +17,11 @@ type MenuSectionProps = {
 const MenuSection = forwardRef<HTMLElement, MenuSectionProps>(
   ({ id, title, items, cartItems, onAddToCart, onRemoveFromCart }, ref) => {
     return (
-      <section ref={ref} className="mb-xl" id={id}>
-        <h2 className="font-heading-lg text-heading-lg mb-lg border-b-2 border-on-background pb-xs inline-block">
+      <section ref={ref} id={id} className="mb-16 mt-12">
+        <h2 className="font-bold text-text text-2xl uppercase tracking-widest mb-6 pb-2 border-b-2 border-secondary/30 inline-block">
           {title}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
             <SushiMenuCard
               key={item.id}

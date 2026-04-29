@@ -20,10 +20,9 @@ type CheckoutFormProps = {
 };
 
 function getInputClassName(hasError?: boolean) {
-  const base = "w-full bg-[#f3f5eb] border-2 border-on-background rounded-none focus:border-primary-container focus:border-[3px] focus:outline-none transition-all px-3 py-2 text-sm outline-none";
-  return hasError
-    ? `${base} border-red-500 focus:border-red-500`
-    : base;
+  const base =
+    "w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all px-3 py-2 text-sm text-text";
+  return hasError ? base + " border-accent" : base;
 }
 
 export default function CheckoutForm({
@@ -48,36 +47,47 @@ export default function CheckoutForm({
       setPickupErrors((prev) => ({ ...prev, phoneNumber: undefined }));
     } else {
       setDeliveryForm((prev) => ({ ...prev, phoneNumber: formattedPhone }));
-      setDeliveryErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+      setDeliveryErrors((prev) => ({ ...prev, phoneNumber: formattedPhone }));
     }
   };
 
   return (
-    <div className="lg:col-span-7">
-      <h2 className="font-heading-lg text-heading-lg mb-md">CHECKOUT</h2>
-      
+    <div className="lg:col-span-7 bg-white rounded-xl shadow-md p-6 md:p-8">
+      <h2 className="font-bold text-text text-lg uppercase tracking-widest mb-6">Checkout</h2>
+
       {/* Tabs */}
-      <div className="flex mb-lg border-b-2 border-on-background">
+      <div className="flex mb-6 border-b border-secondary/20">
         <button
           type="button"
           onClick={() => setActiveTab("delivery")}
-          className={`px-8 py-4 font-label-caps uppercase text-body-regular ${activeTab === "delivery" ? 'text-primary-container border-b-4 border-primary-container -mb-[3px] bg-white' : 'text-tertiary-container hover:text-on-background'}`}
+          className={
+            "px-6 py-3 text-sm font-semibold uppercase tracking-wide transition-colors " +
+            (activeTab === "delivery"
+              ? "text-accent border-b-2 border-accent -mb-px bg-white"
+              : "text-secondary hover:text-text")
+          }
         >
           Delivery
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("pickup")}
-          className={`px-8 py-4 font-label-caps uppercase text-body-regular ${activeTab === "pickup" ? 'text-primary-container border-b-4 border-primary-container -mb-[3px] bg-white' : 'text-tertiary-container hover:text-on-background'}`}
+          className={
+            "px-6 py-3 text-sm font-semibold uppercase tracking-wide transition-colors " +
+            (activeTab === "pickup"
+              ? "text-accent border-b-2 border-accent -mb-px bg-white"
+              : "text-secondary hover:text-text")
+          }
         >
           Pickup
         </button>
       </div>
 
-      <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onSubmitOrder(); }}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col">
-            <label className="font-label-caps text-label-caps uppercase mb-2">Name</label>
+      <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); onSubmitOrder(); }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Name */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Name</label>
             <input
               type="text"
               value={activeTab === "pickup" ? pickupForm.name : deliveryForm.name}
@@ -95,12 +105,15 @@ export default function CheckoutForm({
               maxLength={50}
             />
             {(activeTab === "pickup" ? pickupErrors.name : deliveryErrors.name) && (
-              <p className="text-xs font-medium text-red-600">{activeTab === "pickup" ? pickupErrors.name : deliveryErrors.name}</p>
+              <p className="text-xs font-medium text-accent">
+                {activeTab === "pickup" ? pickupErrors.name : deliveryErrors.name}
+              </p>
             )}
           </div>
 
-          <div className="flex flex-col">
-            <label className="font-label-caps text-label-caps uppercase mb-2">Phone</label>
+          {/* Phone */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Phone</label>
             <input
               type="tel"
               value={activeTab === "pickup" ? pickupForm.phoneNumber : deliveryForm.phoneNumber}
@@ -109,95 +122,89 @@ export default function CheckoutForm({
               placeholder="+375XXXXXXXXX"
             />
             {(activeTab === "pickup" ? pickupErrors.phoneNumber : deliveryErrors.phoneNumber) && (
-              <p className="text-xs font-medium text-red-600">{activeTab === "pickup" ? pickupErrors.phoneNumber : deliveryErrors.phoneNumber}</p>
+              <p className="text-xs font-medium text-accent">
+                {activeTab === "pickup" ? pickupErrors.phoneNumber : deliveryErrors.phoneNumber}
+              </p>
             )}
           </div>
         </div>
 
+        {/* Delivery-specific fields */}
         {activeTab === "delivery" && (
           <>
-            <div className="flex flex-col">
-              <label className="font-label-caps text-label-caps uppercase mb-2">Street</label>
+            {/* Street */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Street</label>
               <input
                 type="text"
                 value={deliveryForm.address.street}
                 onChange={(e) => {
-                  setDeliveryForm(prev => ({
-                    ...prev,
-                    address: { ...prev.address, street: e.target.value }
-                  }));
+                  setDeliveryForm(prev => ({ ...prev, address: { ...prev.address, street: e.target.value } }));
                   setDeliveryErrors(prev => ({ ...prev, street: undefined }));
                 }}
                 className={getInputClassName(!!deliveryErrors.street)}
                 placeholder="Main Street"
                 maxLength={50}
               />
-              {deliveryErrors.street && <p className="text-xs font-medium text-red-600">{deliveryErrors.street}</p>}
+              {deliveryErrors.street && (
+                <p className="text-xs font-medium text-accent">{deliveryErrors.street}</p>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="flex flex-col">
-                <label className="font-label-caps text-label-caps uppercase mb-2">House #</label>
+            {/* Address details */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-secondary uppercase tracking-wider">House #</label>
                 <input
                   type="text"
                   value={deliveryForm.address.houseNumber}
                   onChange={(e) => {
-                    setDeliveryForm(prev => ({
-                      ...prev,
-                      address: { ...prev.address, houseNumber: e.target.value }
-                    }));
-                    setDeliveryErrors(prev => ({ ...prev, houseNumber: undefined }));
+                    setDeliveryForm(prev => ({ ...prev, address: { ...prev.address, houseNumber: e.target.value } }));
                   }}
                   className={getInputClassName(!!deliveryErrors.houseNumber)}
                   maxLength={10}
                 />
-                {deliveryErrors.houseNumber && <p className="text-xs font-medium text-red-600">{deliveryErrors.houseNumber}</p>}
+                {deliveryErrors.houseNumber && (
+                  <p className="text-xs font-medium text-accent">{deliveryErrors.houseNumber}</p>
+                )}
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-label-caps text-label-caps uppercase mb-2">Apt</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Apt</label>
                 <input
                   type="text"
                   value={deliveryForm.address.apartment}
                   onChange={(e) => {
-                    setDeliveryForm(prev => ({
-                      ...prev,
-                      address: { ...prev.address, apartment: e.target.value }
-                    }));
-                    setDeliveryErrors(prev => ({ ...prev, apartment: undefined }));
+                    setDeliveryForm(prev => ({ ...prev, address: { ...prev.address, apartment: e.target.value } }));
                   }}
                   className={getInputClassName(!!deliveryErrors.apartment)}
                   maxLength={10}
                 />
-                {deliveryErrors.apartment && <p className="text-xs font-medium text-red-600">{deliveryErrors.apartment}</p>}
+                {deliveryErrors.apartment && (
+                  <p className="text-xs font-medium text-accent">{deliveryErrors.apartment}</p>
+                )}
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-label-caps text-label-caps uppercase mb-2">Entrance</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Entrance</label>
                 <input
                   type="text"
                   value={deliveryForm.address.entrance}
                   onChange={(e) => {
-                    setDeliveryForm(prev => ({
-                      ...prev,
-                      address: { ...prev.address, entrance: e.target.value }
-                    }));
+                    setDeliveryForm(prev => ({ ...prev, address: { ...prev.address, entrance: e.target.value } }));
                   }}
                   className={getInputClassName()}
                   maxLength={10}
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-label-caps text-label-caps uppercase mb-2">Floor</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Floor</label>
                 <input
                   type="text"
                   value={deliveryForm.address.floor}
                   onChange={(e) => {
-                    setDeliveryForm(prev => ({
-                      ...prev,
-                      address: { ...prev.address, floor: e.target.value }
-                    }));
+                    setDeliveryForm(prev => ({ ...prev, address: { ...prev.address, floor: e.target.value } }));
                   }}
                   className={getInputClassName()}
                   maxLength={10}
@@ -206,53 +213,36 @@ export default function CheckoutForm({
             </div>
 
             {/* Payment Method */}
-            <div className="flex flex-col border-t-2 border-dashed border-on-background pt-6 mt-6">
-              <label className="font-label-caps text-label-caps uppercase mb-4">Payment Method</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    checked={deliveryForm.paymentMethod === "CASH"}
-                    className="w-5 h-5 text-primary-container focus:ring-primary-container border-2 border-on-background bg-transparent"
-                    name="payment"
-                    type="radio"
-                    value="CASH"
-                    onChange={(e) => {
-                      setDeliveryForm(prev => ({
-                        ...prev,
-                        paymentMethod: e.target.value as "CASH" | "CARD",
-                        changeAmount: "",
-                        noChange: false
-                      }));
-                      setDeliveryErrors(prev => ({ ...prev, paymentMethod: undefined, changeAmount: undefined }));
-                    }}
-                  />
-                  <span className="font-body-regular">Cash</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    checked={deliveryForm.paymentMethod === "CARD"}
-                    className="w-5 h-5 text-primary-container focus:ring-primary-container border-2 border-on-background bg-transparent"
-                    name="payment"
-                    type="radio"
-                    value="CARD"
-                    onChange={(e) => {
-                      setDeliveryForm(prev => ({
-                        ...prev,
-                        paymentMethod: e.target.value as "CASH" | "CARD",
-                        changeAmount: "",
-                        noChange: false
-                      }));
-                      setDeliveryErrors(prev => ({ ...prev, paymentMethod: undefined, changeAmount: undefined }));
-                    }}
-                  />
-                  <span className="font-body-regular">Card</span>
-                </label>
+            <div className="flex flex-col gap-3 border-t border-secondary/20 pt-5">
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Payment Method</label>
+              <div className="flex gap-6">
+                {(["CASH", "CARD"] as const).map((method) => (
+                  <label key={method} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value={method}
+                      checked={deliveryForm.paymentMethod === method}
+                      onChange={(e) => {
+                        setDeliveryForm(prev => ({
+                          ...prev,
+                          paymentMethod: e.target.value as "CASH" | "CARD",
+                          changeAmount: "",
+                          noChange: false
+                        }));
+                        setDeliveryErrors(prev => ({ ...prev, paymentMethod: undefined, changeAmount: undefined }));
+                      }}
+                      className="w-4 h-4 accent-accent"
+                    />
+                    <span className="text-sm text-text">{method === "CASH" ? "Cash" : "Card"}</span>
+                  </label>
+                ))}
               </div>
 
-              {/* Change from / No change - only when CASH */}
+              {/* Change fields — only for CASH */}
               {deliveryForm.paymentMethod === "CASH" && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       id="no-change"
@@ -265,16 +255,14 @@ export default function CheckoutForm({
                         }));
                         setDeliveryErrors(prev => ({ ...prev, changeAmount: undefined }));
                       }}
-                      className="w-5 h-5 text-primary-container focus:ring-primary-container border-2 border-on-background rounded-none bg-transparent"
+                      className="w-4 h-4 accent-accent rounded"
                     />
-                    <label htmlFor="no-change" className="font-body-regular cursor-pointer">
-                      No change
-                    </label>
-                  </div>
+                    <span className="text-sm text-text">No change needed</span>
+                  </label>
 
                   {!deliveryForm.noChange && (
-                    <div className="flex flex-col">
-                      <label className="font-label-caps text-label-caps uppercase mb-2">Change from</label>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Change from</label>
                       <input
                         type="text"
                         value={deliveryForm.changeAmount}
@@ -286,7 +274,9 @@ export default function CheckoutForm({
                         placeholder="e.g. 50"
                         maxLength={20}
                       />
-                      {deliveryErrors.changeAmount && <p className="text-xs font-medium text-red-600">{deliveryErrors.changeAmount}</p>}
+                      {deliveryErrors.changeAmount && (
+                        <p className="text-xs font-medium text-accent">{deliveryErrors.changeAmount}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -294,10 +284,10 @@ export default function CheckoutForm({
             </div>
 
             {/* Comment */}
-            <div className="flex flex-col pt-2">
-              <label className="font-label-caps text-label-caps uppercase mb-2">Order Comment</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Order Comment</label>
               <textarea
-                className="w-full bg-[#f3f5eb] border-2 border-on-background rounded-none focus:border-primary-container focus:border-[3px] focus:outline-none transition-all p-3 font-body-regular min-h-[100px]"
+                className="w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all p-3 text-sm text-text min-h-[90px] resize-none"
                 placeholder="Any special requests?"
                 value={deliveryForm.comment}
                 onChange={(e) => {
@@ -310,11 +300,12 @@ export default function CheckoutForm({
           </>
         )}
 
+        {/* Pickup comment */}
         {activeTab === "pickup" && (
-          <div className="flex flex-col pt-2">
-            <label className="font-label-caps text-label-caps uppercase mb-2">Order Comment</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Order Comment</label>
             <textarea
-              className="w-full bg-[#f3f5eb] border-2 border-on-background rounded-none focus:border-primary-container focus:border-[3px] focus:outline-none transition-all p-3 font-body-regular min-h-[100px]"
+              className="w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all p-3 text-sm text-text min-h-[90px] resize-none"
               placeholder="Any special requests?"
               value={pickupForm.comment}
               onChange={(e) => {
@@ -327,10 +318,11 @@ export default function CheckoutForm({
         )}
 
         {activeTab === "delivery" && deliveryErrors.paymentMethod && (
-          <p className="text-xs font-medium text-red-600">{deliveryErrors.paymentMethod}</p>
+          <p className="text-xs font-medium text-accent">{deliveryErrors.paymentMethod}</p>
         )}
-        {requestError && <p className="text-sm font-medium text-red-600">{requestError}</p>}
-
+        {requestError && (
+          <p className="text-sm font-medium text-accent">{requestError}</p>
+        )}
       </form>
     </div>
   );

@@ -5,7 +5,7 @@ import { sushiMenuItems } from "@/data/sushiMenu";
 import { readCartFromStorage, writeCartToStorage } from "@/lib/cart";
 import type { CartState } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
-import { validatePickupForm, validateDeliveryForm, isPickupFormFilled, isDeliveryFormFilled, formatPhoneNumber, formatDeliveryAddress, buildDeliveryComment, buildChangeInfo } from "@/lib/validations";
+import { validatePickupForm, validateDeliveryForm, formatDeliveryAddress, buildDeliveryComment, buildChangeInfo } from "@/lib/validations";
 
 import Header from "@/components/Header";
 import MenuSection from "@/components/MenuSection";
@@ -70,7 +70,7 @@ export default function HomePage() {
     if (!el) return;
     const offset = 100;
     const top = el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
+    window.scrollTo({ top, behavior: "smooth" });
   };
 
   // Load cart from storage on mount
@@ -147,9 +147,10 @@ export default function HomePage() {
     setPickupErrors({});
     setDeliveryErrors({});
 
-    const isValid = activeTab === "pickup"
-      ? Object.keys(validatePickupForm(pickupForm)).length === 0
-      : Object.keys(validateDeliveryForm(deliveryForm)).length === 0;
+    const isValid =
+      activeTab === "pickup"
+        ? Object.keys(validatePickupForm(pickupForm)).length === 0
+        : Object.keys(validateDeliveryForm(deliveryForm)).length === 0;
 
     if (!isValid) {
       if (activeTab === "pickup") {
@@ -207,7 +208,7 @@ export default function HomePage() {
       setPickupErrors({});
       setDeliveryErrors({});
       resetForms();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setRequestError("Something went wrong while sending the order.");
     } finally {
@@ -226,80 +227,79 @@ export default function HomePage() {
         onScrollToSection={scrollToSection}
       />
 
-      <main className="flex-grow max-w-[1200px] mx-auto w-full px-8 py-lg">
-        
+      <main className="flex-grow max-w-[1200px] mx-auto w-full px-4 md:px-8 py-10">
+
+        {/* Success banner */}
         {successMessage && (
-          <section className="mb-xl rounded-xl border-2 border-green-500 bg-green-50 p-6">
+          <section className="mb-10 rounded-xl border border-secondary bg-secondary/10 p-5">
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
-              <p className="text-lg font-bold text-green-700">{successMessage}</p>
+              <span className="material-symbols-outlined text-secondary text-2xl">check_circle</span>
+              <p className="text-base font-semibold text-secondary">{successMessage}</p>
             </div>
           </section>
         )}
 
-        {/* Hero Section */}
-        <section className="mb-xl pt-8">
-          <h1 className="font-heading-xl text-heading-xl mb-4">Fresh sushi made every day.</h1>
-          <p className="font-body-regular text-body-regular max-w-2xl text-zinc-700">
+        {/* Hero */}
+        <section className="mb-10 pt-6">
+          <h1 className="font-bold text-text text-4xl md:text-5xl tracking-tight mb-3">
+            Fresh sushi made every day.
+          </h1>
+          <p className="text-base text-secondary max-w-2xl leading-relaxed">
             Explore our handcrafted menu with premium ingredients and balanced flavors.
           </p>
         </section>
 
-        {/* Sushi Section */}
+        {/* Menu sections */}
         <MenuSection
           ref={sushiRef}
           id="sushi"
-          title="SUSHI"
-          items={sushiMenuItems.filter(i => i.category === "sushi")}
+          title="Sushi"
+          items={sushiMenuItems.filter((i) => i.category === "sushi")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
 
-        <hr className="border-t-2 border-on-background mb-xl"/>
+        <hr className="border-t border-secondary/20 mb-4" />
 
-        {/* Sets Section */}
         <MenuSection
           ref={setsRef}
           id="sets"
-          title="SETS"
-          items={sushiMenuItems.filter(i => i.category === "sets")}
+          title="Sets"
+          items={sushiMenuItems.filter((i) => i.category === "sets")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
 
-        <hr className="border-t-2 border-on-background mb-xl"/>
+        <hr className="border-t border-secondary/20 mb-4" />
 
-        {/* Sauces Section */}
         <MenuSection
           ref={saucesRef}
           id="sauces"
-          title="SAUCES"
-          items={sushiMenuItems.filter(i => i.category === "sauces")}
+          title="Sauces"
+          items={sushiMenuItems.filter((i) => i.category === "sauces")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
 
-        <hr className="border-t-2 border-on-background mb-xl"/>
+        <hr className="border-t border-secondary/20 mb-4" />
 
-        {/* Drinks Section */}
         <MenuSection
           ref={drinksRef}
           id="drinks"
-          title="DRINKS"
-          items={sushiMenuItems.filter(i => i.category === "drinks")}
+          title="Drinks"
+          items={sushiMenuItems.filter((i) => i.category === "drinks")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
         />
 
-        <hr className="border-t-2 border-on-background mb-xl"/>
+        <hr className="border-t border-secondary/20 mb-10" />
 
-        {/* Checkout Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-xl" id="checkout">
-          {/* Order Form */}
+        {/* Checkout section */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16" id="checkout">
           <CheckoutForm
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -316,8 +316,7 @@ export default function HomePage() {
             onSubmitOrder={handleSubmitOrder}
           />
 
-          {/* Cart Summary Sidebar */}
-          <div className="lg:col-span-5 mt-lg lg:mt-0">
+          <div className="lg:col-span-5 mt-8 lg:mt-0">
             <CartSummary
               lineItems={lineItems}
               totalPrice={totalPrice}
@@ -332,23 +331,23 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-zinc-900 dark:bg-black text-zinc-100 text-xs font-light tracking-wider w-full mt-20 border-t-4 border-zinc-900">
-        <div className="max-w-[1200px] mx-auto px-8 py-16 flex flex-col md:flex-row justify-between items-start gap-8">
-          <div className="text-xl font-bold text-white mb-4 md:mb-0">
+      <footer className="bg-primary text-background w-full mt-10">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-14 flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className="text-xl font-bold tracking-widest">
             MORESUSHI
           </div>
-          <div className="flex flex-col md:flex-row gap-8 lg:gap-16">
+          <div className="flex flex-col md:flex-row gap-8 lg:gap-16 text-sm">
             <div className="flex flex-col gap-2">
-              <span className="text-zinc-400">Working Hours: 11:00 - 23:00</span>
+              <span className="text-background/60">Working Hours: 11:00 – 23:00</span>
             </div>
             <div className="flex flex-col gap-2">
-              <a className="text-zinc-400 hover:text-primary-container transition-colors" href="#">Sustainability</a>
-              <a className="text-zinc-400 hover:text-primary-container transition-colors" href="#">Terms of Service</a>
-              <a className="text-zinc-400 hover:text-primary-container transition-colors" href="#">Privacy Policy</a>
+              <a className="text-background/60 hover:text-accent transition-colors" href="#">Sustainability</a>
+              <a className="text-background/60 hover:text-accent transition-colors" href="#">Terms of Service</a>
+              <a className="text-background/60 hover:text-accent transition-colors" href="#">Privacy Policy</a>
             </div>
           </div>
-          <div className="mt-8 md:mt-0 text-zinc-500">
-            © 2024 MORESUSHI ATELIER. PRECISION IN EVERY ROLL.
+          <div className="text-background/40 text-xs">
+            © 2024 MORESUSHI. PRECISION IN EVERY ROLL.
           </div>
         </div>
       </footer>

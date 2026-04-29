@@ -1,4 +1,3 @@
-
 import type { CartLineItem } from "@/lib/types";
 
 type CartItemCardProps = {
@@ -9,41 +8,41 @@ type CartItemCardProps = {
 
 export default function CartItemCard({ item, onIncrease, onDecrease }: CartItemCardProps) {
   return (
-    <div className="flex items-center gap-4 py-2 border-b border-dashed border-zinc-300">
-      <img 
-        src={item.image} 
-        alt={item.name} 
-        className="w-16 h-16 object-cover border border-on-background flex-shrink-0"
+    <div className="flex items-center gap-3 py-3 border-b border-secondary/20">
+      <img
+        src={item.image}
+        alt={item.name}
+        className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
       />
-      
+
       <div className="flex-grow min-w-0">
-        <h4 className="font-product-name text-sm truncate">{item.name}</h4>
-        <span className="font-price text-sm text-primary-container">{item.price.toFixed(2)} BYN</span>
+        <h4 className="font-semibold text-text text-sm truncate">{item.name}</h4>
+        <span className="text-accent text-sm font-medium">{item.price.toFixed(2)} BYN</span>
       </div>
 
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <div className="flex border border-on-background w-[80px]">
-          <button 
+        <div className="flex items-center border border-secondary/40 rounded-lg overflow-hidden">
+          <button
             type="button"
             onClick={onDecrease}
-            className="px-2 py-1 hover:bg-zinc-200 text-xs w-7 h-7 text-center"
-            aria-label={`Decrease ${item.name} quantity`}
+            className="w-7 h-7 flex items-center justify-center hover:bg-primary/10 text-primary font-bold text-xs transition-colors cursor-pointer"
+            aria-label={"Decrease " + item.name + " quantity"}
           >
-            -
+            −
           </button>
-          <span className="px-2 py-1 font-product-name text-xs border-l border-r border-on-background w-7 h-7 text-center">
+          <span className="w-7 h-7 flex items-center justify-center text-text text-xs font-bold border-x border-secondary/40">
             {item.quantity}
           </span>
-          <button 
+          <button
             type="button"
             onClick={onIncrease}
-            className="px-2 py-1 hover:bg-zinc-200 text-xs w-7 h-7 text-center"
-            aria-label={`Increase ${item.name} quantity`}
+            className="w-7 h-7 flex items-center justify-center hover:bg-primary/10 text-primary font-bold text-xs transition-colors cursor-pointer"
+            aria-label={"Increase " + item.name + " quantity"}
           >
             +
           </button>
         </div>
-        <span className="font-price text-sm font-bold text-primary-container min-w-[60px] text-right">
+        <span className="text-accent text-sm font-bold">
           {item.lineTotal.toFixed(2)} BYN
         </span>
       </div>

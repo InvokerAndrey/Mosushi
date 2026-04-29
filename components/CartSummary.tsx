@@ -23,17 +23,20 @@ export default function CartSummary({
   onSubmitOrder
 }: CartSummaryProps) {
   return (
-    <div className="border-2 border-on-background bg-transparent p-md sticky top-32 bg-white">
-      <h3 className="font-heading-lg text-heading-lg mb-md">YOUR ORDER</h3>
+    <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+      <h3 className="font-bold text-text text-lg uppercase tracking-widest mb-5">Your Order</h3>
 
       {lineItems.length === 0 ? (
-        <div className="text-center py-8 text-zinc-500">
-          <p>Your cart is empty</p>
-          <p className="text-sm mt-2">Add some sushi from the menu above</p>
+        <div className="text-center py-10 text-secondary">
+          <span className="material-symbols-outlined text-4xl mb-2 block opacity-50">
+            shopping_cart
+          </span>
+          <p className="font-medium">Your cart is empty</p>
+          <p className="text-sm mt-1 opacity-70">Add some sushi from the menu above</p>
         </div>
       ) : (
         <>
-          <div className="space-y-4 mb-md">
+          <div className="space-y-1 mb-4">
             {lineItems.map((item) => (
               <CartItemCard
                 key={item.id}
@@ -44,29 +47,31 @@ export default function CartSummary({
             ))}
           </div>
 
-          <div className="pt-4 space-y-2 mb-lg">
-            <div className="flex justify-between font-body-regular text-tertiary-container">
+          {/* Totals */}
+          <div className="space-y-2 pt-4 mb-5">
+            <div className="flex justify-between text-sm text-secondary">
               <span>Subtotal</span>
-              <span className="min-w-[60px] text-right">{totalPrice.toFixed(2)} BYN</span>
+              <span>{totalPrice.toFixed(2)} BYN</span>
             </div>
-            <div className="flex justify-between font-body-regular text-tertiary-container">
+            <div className="flex justify-between text-sm text-secondary">
               <span>Delivery</span>
-              <span className="min-w-[60px] text-right">0.00 BYN</span>
+              <span>0.00 BYN</span>
             </div>
-            <div className="flex justify-between font-price text-xl mt-4 pt-4 border-t-2 border-on-background">
+            <div className="flex justify-between font-bold text-base text-text pt-3 border-t border-secondary/20">
               <span>Total</span>
-              <span className="text-primary-container min-w-[60px] text-right">{totalPrice.toFixed(2)} BYN</span>
+              <span className="text-accent">{totalPrice.toFixed(2)} BYN</span>
             </div>
           </div>
 
           {requestError && (
-            <p className="text-sm font-medium text-red-600 mb-3 text-center">{requestError}</p>
+            <p className="text-sm font-medium text-accent mb-3 text-center">{requestError}</p>
           )}
+
           <button
             type="button"
             onClick={onSubmitOrder}
             disabled={isSubmitting}
-            className="bg-primary-container text-white border-b-2 border-on-background rounded-none hover:opacity-90 transition-opacity w-full py-4 font-heading-lg text-xl uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary text-background hover:bg-primary/90 transition-colors py-3 rounded-lg font-bold text-sm uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Placing order..." : "Place Order"}
           </button>

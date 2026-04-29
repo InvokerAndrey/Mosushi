@@ -14,58 +14,61 @@ export default function SushiMenuCard({
   onRemoveFromCart
 }: SushiMenuCardProps) {
   return (
-    <article className="border-2 border-on-background bg-transparent p-md flex flex-col h-full hover:translate-y-[-4px] transition-transform duration-200">
-      <div className="mb-md bg-white border-2 border-on-background overflow-hidden aspect-square">
-        <img 
-          src={item.image} 
-          alt={item.name} 
-          className="w-full h-full object-cover"
+    <article className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full overflow-hidden">
+      {/* Image */}
+      <div className="aspect-square overflow-hidden bg-background">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
 
-      <div className="flex-grow">
-        <div className="flex justify-between items-start mb-xs">
-          <h3 className="font-product-name text-product-name">{item.name}</h3>
+      {/* Content */}
+      <div className="flex flex-col flex-grow p-5">
+        <div className="flex-grow">
+          <h3 className="font-semibold text-text text-base leading-snug mb-1">{item.name}</h3>
+          <p className="text-sm text-secondary leading-relaxed">
+            {item.ingredients.join(", ")}
+          </p>
         </div>
-        <p className="font-ingredient-list text-ingredient-list text-tertiary-container mb-md">
-          {item.ingredients.join(", ")}
-        </p>
-      </div>
 
-      <div className="flex justify-between items-end mt-auto pt-md border-t border-on-background border-dashed">
-        <span className="font-price text-price text-primary-container">{item.price.toFixed(2)} BYN</span>
-        
-        {quantityInCart === 0 ? (
-          <button 
-            type="button"
-            onClick={() => onAddToCart(item.id)}
-            className="bg-primary-container text-white border-b-2 border-on-background rounded-none hover:opacity-90 transition-opacity px-6 py-2 font-label-caps text-label-caps uppercase cursor-pointer"
-          >
-            Add to Cart
-          </button>
-        ) : (
-          <div className="flex border-2 border-on-background">
-            <button 
-              type="button"
-              onClick={() => onRemoveFromCart(item.id)}
-              className="px-3 py-1 hover:bg-zinc-200 font-bold cursor-pointer"
-              aria-label={`Decrease ${item.name} quantity`}
-            >
-              -
-            </button>
-            <span className="px-4 py-1 font-product-name border-l-2 border-r-2 border-on-background">
-              {quantityInCart}
-            </span>
-            <button 
+        {/* Price + Action */}
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-secondary/20">
+          <span className="font-bold text-accent text-lg">{item.price.toFixed(2)} BYN</span>
+
+          {quantityInCart === 0 ? (
+            <button
               type="button"
               onClick={() => onAddToCart(item.id)}
-              className="px-3 py-1 hover:bg-zinc-200 font-bold cursor-pointer"
-              aria-label={`Increase ${item.name} quantity`}
+              className="bg-accent text-white hover:bg-accent-dark transition-colors px-5 py-2 rounded-lg font-semibold text-sm cursor-pointer"
             >
-              +
+              Add to Cart
             </button>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center border border-secondary/40 rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => onRemoveFromCart(item.id)}
+                className="w-8 h-8 flex items-center justify-center hover:bg-primary/10 text-primary font-bold transition-colors cursor-pointer"
+                aria-label={"Decrease " + item.name + " quantity"}
+              >
+                −
+              </button>
+              <span className="w-8 h-8 flex items-center justify-center font-bold text-text text-sm border-x border-secondary/40">
+                {quantityInCart}
+              </span>
+              <button
+                type="button"
+                onClick={() => onAddToCart(item.id)}
+                className="w-8 h-8 flex items-center justify-center hover:bg-primary/10 text-primary font-bold transition-colors cursor-pointer"
+                aria-label={"Increase " + item.name + " quantity"}
+              >
+                +
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );
