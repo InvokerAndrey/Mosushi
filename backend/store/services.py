@@ -1,0 +1,137 @@
+"""
+Business logic for order creation.
+Views are thin — all processing, validation, and side effects happen here.
+"""
+
+import logging
+from decimal import Decimal, InvalidOperation
+
+from .constants import DELIVERY_FEE, FREE_DELIVERY_THRESHOLD
+from .models import Order, Product
+from .telegram import send_order_to_telegram
+
+logger = logging.getLogger(__name__)
+
+
+class OrderValidationError(Exception):
+    """Raised when incoming order data fails validation."""
+    pass
+
+
+def create_order(body: dict) -> Order:
+    """
+    Validate, persist, and notify for a new order.
+
+    Args:
+        body: Parsed JSON payload from the POST /order request.
+
+    Returns:
+        The saved Order instance.
+
+    Raises:
+        OrderValidationError: If any required field is missing or invalid.
+    """
+    order_type = body.get("orderType")
+    cart_items = body.get("cartItems")
+    client_total = body.get("totalPrice")
+    pickup = body.get("pickup") or {}
+    delivery = body.get("delivery") or {}
+
+    # --- Top-level validation ---
+    if order_type not in ("pickup", "delivery"):
+        raise OrderValidationError("Invalid order type.")
+
+    if not isinstance(cart_items, dict) or not cart_items:
+        raise OrderValidationError("Cart is empty or missing.")
+
+    if not isinstance(client_total, (int, float)):
+        raise OrderValidationError("totalPrice must be a number.")
+
+    # --- Build line items — prices always come from the DB, never the client ---
+    slugs = [slug for slug, qty in cart_items.items() if isinstance(qty, int) and qty > 0]
+    db_products = {p.slug: p for p in Product.objects.filter(slug__in=slugs, available=True)}
+
+    line_items = []
+    for slug in slugs:
+        product = db_products.get(slug)
+        if not product:
+            continue
+        qty = cart_items[slug]
+        line_items.append({
+            "name": product.name,
+            "quantity": qty,
+            "price": float(product.price),
+            "lineTotal": float(product.price * qty),
+        })
+
+    if not line_items:
+        raise OrderValidationError("Cart contains no valid products.")
+
+    # --- Server-side total calculation ---
+    subtotal = sum(Decimal(str(item["lineTotal"])) for item in line_items)
+    delivery_fee = (
+        Decimal("0.00")
+        if order_type == "pickup" or subtotal >= FREE_DELIVERY_THRESHOLD
+        else DELIVERY_FEE
+    )
+    grand_total = subtotal + delivery_fee
+
+    # Verify the client-submitted total (allow ±1 cent for float drift)
+    try:
+        if abs(grand_total - Decimal(str(client_total))) > Decimal("0.01"):
+            raise OrderValidationError("Total price mismatch.")
+    except InvalidOperation:
+        raise OrderValidationError("totalPrice is not a valid number.")
+
+    # --- Order-type-specific validation and Object construction ---
+    if order_type == "pickup":
+        if not pickup.get("name", "").strip():
+            raise OrderValidationError("Pickup: name is required.")
+        if not pickup.get("phoneNumber", "").strip():
+            raise OrderValidationError("Pickup: phone is required.")
+
+        order = Order(
+            order_type="pickup",
+            customer_name=pickup["name"].strip(),
+            phone=pickup["phoneNumber"].strip(),
+            address="",
+            items=line_items,
+            total_price=grand_total,
+            order_time=pickup.get("orderTime", "asap"),
+            scheduled_time=pickup.get("scheduledTime") or "",
+            comment=(pickup.get("comment") or "").strip(),
+        )
+    else:
+        if not delivery.get("name", "").strip():
+            raise OrderValidationError("Delivery: name is required.")
+        if not delivery.get("phoneNumber", "").strip():
+            raise OrderValidationError("Delivery: phone is required.")
+        if not delivery.get("address", "").strip():
+            raise OrderValidationError("Delivery: address is required.")
+        if delivery.get("paymentMethod") not in ("CASH", "CARD"):
+            raise OrderValidationError("Invalid payment method.")
+
+        order = Order(
+            order_type="delivery",
+            customer_name=delivery["name"].strip(),
+            phone=delivery["phoneNumber"].strip(),
+            address=delivery["address"].strip(),
+            items=line_items,
+            total_price=grand_total,
+            payment_method=delivery["paymentMethod"],
+            change_amount=(delivery.get("changeAmount") or "").strip(),
+            no_change=bool(delivery.get("noChange", False)),
+            order_time=delivery.get("orderTime", "asap"),
+            scheduled_time=delivery.get("scheduledTime") or "",
+            comment=(delivery.get("comment") or "").strip(),
+        )
+
+    # --- Persist ---
+    order.save()
+    logger.info("Order #%d created: %s %s", order.pk, order.order_type, order.customer_name)
+
+    # --- Telegram notification (never blocks or cancels the order on failure) ---
+    if not send_order_to_telegram(order):
+        logger.warning("Order #%d saved, but Telegram notification failed.", order.pk)
+
+    return order

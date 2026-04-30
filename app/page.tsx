@@ -32,6 +32,8 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("sushi");
   const [menuItems, setMenuItems] = useState<SushiMenuItem[]>([]);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
 
   const sushiRef = useRef<HTMLElement>(null);
   const setsRef = useRef<HTMLElement>(null);
@@ -86,9 +88,13 @@ export default function HomePage() {
   // Fetch menu from Django API on mount
   useEffect(() => {
     fetch("/products")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data: SushiMenuItem[]) => setMenuItems(data))
-      .catch(() => console.error("Failed to load menu from API"));
+      .catch(() => setMenuError("Не удалось загрузить меню. Убедитесь, что сервер запущен."))
+      .finally(() => setIsMenuLoading(false));
   }, []);
 
   // Load cart from storage on mount
@@ -270,49 +276,63 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* Menu sections */}
-        <MenuSection
-          ref={sushiRef}
-          id="sushi"
-          title="Суши"
-          items={menuItems.filter((i) => i.category === "sushi")}
-          cartItems={cartItems}
-          onAddToCart={handleAddToCart}
-          onRemoveFromCart={handleRemoveFromCart}
-        />
-        <hr className="border-t border-secondary/20 mb-4" />
+        {/* Menu — loading / error / content states */}
+        {isMenuLoading && (
+          <p className="text-secondary text-sm mb-10">Загрузка меню…</p>
+        )}
 
-        <MenuSection
-          ref={setsRef}
-          id="sets"
-          title="Сеты"
-          items={menuItems.filter((i) => i.category === "sets")}
-          cartItems={cartItems}
-          onAddToCart={handleAddToCart}
-          onRemoveFromCart={handleRemoveFromCart}
-        />
-        <hr className="border-t border-secondary/20 mb-4" />
+        {!isMenuLoading && menuError && (
+          <section className="mb-10 rounded-xl border border-red-300 bg-red-50 p-5">
+            <p className="text-sm font-medium text-red-600">{menuError}</p>
+          </section>
+        )}
 
-        <MenuSection
-          ref={saucesRef}
-          id="sauces"
-          title="Соусы"
-          items={menuItems.filter((i) => i.category === "sauces")}
-          cartItems={cartItems}
-          onAddToCart={handleAddToCart}
-          onRemoveFromCart={handleRemoveFromCart}
-        />
-        <hr className="border-t border-secondary/20 mb-4" />
+        {!isMenuLoading && !menuError && (
+          <>
+            <MenuSection
+              ref={sushiRef}
+              id="sushi"
+              title="Суши"
+              items={menuItems.filter((i) => i.category === "sushi")}
+              cartItems={cartItems}
+              onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
+            />
+            <hr className="border-t border-secondary/20 mb-4" />
 
-        <MenuSection
-          ref={drinksRef}
-          id="drinks"
-          title="Напитки"
-          items={menuItems.filter((i) => i.category === "drinks")}
-          cartItems={cartItems}
-          onAddToCart={handleAddToCart}
-          onRemoveFromCart={handleRemoveFromCart}
-        />
+            <MenuSection
+              ref={setsRef}
+              id="sets"
+              title="Сеты"
+              items={menuItems.filter((i) => i.category === "sets")}
+              cartItems={cartItems}
+              onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
+            />
+            <hr className="border-t border-secondary/20 mb-4" />
+
+            <MenuSection
+              ref={saucesRef}
+              id="sauces"
+              title="Соусы"
+              items={menuItems.filter((i) => i.category === "sauces")}
+              cartItems={cartItems}
+              onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
+            />
+            <hr className="border-t border-secondary/20 mb-4" />
+
+            <MenuSection
+              ref={drinksRef}
+              id="drinks"
+              title="Напитки"
+              items={menuItems.filter((i) => i.category === "drinks")}
+              cartItems={cartItems}
+              onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
+            />
+          </>
+        )}
         <hr className="border-t border-secondary/20 mb-10" />
 
         {/* Checkout section — CartSummary LEFT on desktop, first on mobile */}
