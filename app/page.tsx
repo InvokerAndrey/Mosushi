@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { sushiMenuItems } from "@/data/sushiMenu";
+import type { SushiMenuItem } from "@/data/sushiMenu";
 import { readCartFromStorage, writeCartToStorage } from "@/lib/cart";
 import type { CartState } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
@@ -31,6 +31,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("sushi");
+  const [menuItems, setMenuItems] = useState<SushiMenuItem[]>([]);
 
   const sushiRef = useRef<HTMLElement>(null);
   const setsRef = useRef<HTMLElement>(null);
@@ -82,6 +83,14 @@ export default function HomePage() {
     window.scrollTo({ top, behavior: "smooth" });
   };
 
+  // Fetch menu from Django API on mount
+  useEffect(() => {
+    fetch("/products")
+      .then((res) => res.json())
+      .then((data: SushiMenuItem[]) => setMenuItems(data))
+      .catch(() => console.error("Failed to load menu from API"));
+  }, []);
+
   // Load cart from storage on mount
   useEffect(() => {
     setCartItems(readCartFromStorage());
@@ -94,9 +103,9 @@ export default function HomePage() {
     writeCartToStorage(cartItems);
   }, [cartItems, isCartReady]);
 
-  // Build line items from cart
+  // Build line items from cart (uses menuItems fetched from Django)
   const lineItems = useMemo(() => {
-    return sushiMenuItems
+    return menuItems
       .map((item) => {
         const quantity = cartItems[item.id] ?? 0;
         if (quantity === 0) return null;
@@ -109,8 +118,8 @@ export default function HomePage() {
           lineTotal: item.price * quantity
         };
       })
-      .filter((item) => item !== null);
-  }, [cartItems]);
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [cartItems, menuItems]);
 
   const subtotalPrice = useMemo(
     () => lineItems.reduce((sum, item) => sum + item.lineTotal, 0),
@@ -203,7 +212,7 @@ export default function HomePage() {
     };
 
     try {
-      const response = await fetch("/api/order", {
+      const response = await fetch("/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody)
@@ -266,7 +275,7 @@ export default function HomePage() {
           ref={sushiRef}
           id="sushi"
           title="Суши"
-          items={sushiMenuItems.filter((i) => i.category === "sushi")}
+          items={menuItems.filter((i) => i.category === "sushi")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
@@ -277,7 +286,7 @@ export default function HomePage() {
           ref={setsRef}
           id="sets"
           title="Сеты"
-          items={sushiMenuItems.filter((i) => i.category === "sets")}
+          items={menuItems.filter((i) => i.category === "sets")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
@@ -288,7 +297,7 @@ export default function HomePage() {
           ref={saucesRef}
           id="sauces"
           title="Соусы"
-          items={sushiMenuItems.filter((i) => i.category === "sauces")}
+          items={menuItems.filter((i) => i.category === "sauces")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
@@ -299,7 +308,7 @@ export default function HomePage() {
           ref={drinksRef}
           id="drinks"
           title="Напитки"
-          items={sushiMenuItems.filter((i) => i.category === "drinks")}
+          items={menuItems.filter((i) => i.category === "drinks")}
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onRemoveFromCart={handleRemoveFromCart}
