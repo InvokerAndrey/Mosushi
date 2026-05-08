@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { CheckoutTab, PickupFormState, DeliveryFormState } from "@/lib/validations";
 import { formatPhoneNumber } from "@/lib/validations";
 
@@ -19,18 +20,50 @@ type CheckoutFormProps = {
   onSubmitOrder: () => void;
 };
 
+type TimeSlot = { value: string; label: string };
+
+/**
+ * Generates 15-minute time slots starting from `minOffsetMinutes` from now.
+ * The first slot is rounded UP to the next 15-min interval.
+ * Covers today + 2 days ahead, stopping at 23:45.
+ */
+function generateTimeSlots(minOffsetMinutes: number): TimeSlot[] {
+  const STEP = 15 * 60 * 1000;
+  const minTime = new Date(Math.ceil((Date.now() + minOffsetMinutes * 60_000) / STEP) * STEP);
+
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const end = new Date(now);
+  end.setDate(end.getDate() + 2);
+  end.setHours(23, 45, 0, 0);
+
+  const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  const slots: TimeSlot[] = [];
+  const cur = new Date(minTime);
+
+  while (cur <= end) {
+    const hh = cur.getHours().toString().padStart(2, "0");
+    const mm = cur.getMinutes().toString().padStart(2, "0");
+
+    let day: string;
+    if (cur.toDateString() === now.toDateString()) day = "Сегодня";
+    else if (cur.toDateString() === tomorrow.toDateString()) day = "Завтра";
+    else day = `${cur.getDate()} ${MONTHS[cur.getMonth()]}`;
+
+    const label = `${day}, ${hh}:${mm}`;
+    slots.push({ value: label, label });
+    cur.setTime(cur.getTime() + STEP);
+  }
+
+  return slots;
+}
+
 function getInputClassName(hasError?: boolean) {
   const base =
     "w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all px-3 py-2 text-sm text-text";
   return hasError ? base + " border-accent" : base;
-}
-
-/** Returns "YYYY-MM-DDTHH:MM" rounded up to next 15-min slot from now + offset */
-function getMinDatetime(minutesFromNow: number): string {
-  const step = 15 * 60 * 1000;
-  const rounded = new Date(Math.ceil((Date.now() + minutesFromNow * 60 * 1000) / step) * step);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${rounded.getFullYear()}-${pad(rounded.getMonth() + 1)}-${pad(rounded.getDate())}T${pad(rounded.getHours())}:${pad(rounded.getMinutes())}`;
 }
 
 export default function CheckoutForm({
@@ -48,6 +81,10 @@ export default function CheckoutForm({
   isSubmitting,
   onSubmitOrder
 }: CheckoutFormProps) {
+  // Pre-generate slots once per render cycle (refreshes if component re-renders)
+  const deliverySlots = useMemo(() => generateTimeSlots(60), []);
+  const pickupSlots = useMemo(() => generateTimeSlots(30), []);
+
   const handlePhoneChange = (value: string, isPickup: boolean) => {
     const formatted = formatPhoneNumber(value);
     if (isPickup) {
@@ -183,10 +220,10 @@ export default function CheckoutForm({
                     )}
                     maxLength={10}
                   />
-                  {(key === "houseNumber" && deliveryErrors.houseNumber) && (
+                  {key === "houseNumber" && deliveryErrors.houseNumber && (
                     <p className="text-xs font-medium text-accent">{deliveryErrors.houseNumber}</p>
                   )}
-                  {(key === "apartment" && deliveryErrors.apartment) && (
+                  {key === "apartment" && deliveryErrors.apartment && (
                     <p className="text-xs font-medium text-accent">{deliveryErrors.apartment}</p>
                   )}
                 </div>
@@ -298,17 +335,19 @@ export default function CheckoutForm({
               </div>
               {deliveryForm.orderTime === "specific" && (
                 <div className="flex flex-col gap-1">
-                  <input
-                    type="datetime-local"
+                  <select
                     value={deliveryForm.scheduledTime}
-                    min={getMinDatetime(60)}
-                    step={900}
                     onChange={(e) => {
                       setDeliveryForm((prev) => ({ ...prev, scheduledTime: e.target.value }));
                       setDeliveryErrors((prev) => ({ ...prev, scheduledTime: undefined }));
                     }}
                     className={getInputClassName(!!deliveryErrors.scheduledTime)}
-                  />
+                  >
+                    <option value="">Выберите время</option>
+                    {deliverySlots.map((slot) => (
+                      <option key={slot.value} value={slot.value}>{slot.label}</option>
+                    ))}
+                  </select>
                   {deliveryErrors.scheduledTime && (
                     <p className="text-xs font-medium text-accent">{deliveryErrors.scheduledTime}</p>
                   )}
@@ -369,17 +408,19 @@ export default function CheckoutForm({
               </div>
               {pickupForm.orderTime === "specific" && (
                 <div className="flex flex-col gap-1">
-                  <input
-                    type="datetime-local"
+                  <select
                     value={pickupForm.scheduledTime}
-                    min={getMinDatetime(30)}
-                    step={900}
                     onChange={(e) => {
                       setPickupForm((prev) => ({ ...prev, scheduledTime: e.target.value }));
                       setPickupErrors((prev) => ({ ...prev, scheduledTime: undefined }));
                     }}
                     className={getInputClassName(!!pickupErrors.scheduledTime)}
-                  />
+                  >
+                    <option value="">Выберите время</option>
+                    {pickupSlots.map((slot) => (
+                      <option key={slot.value} value={slot.value}>{slot.label}</option>
+                    ))}
+                  </select>
                   {pickupErrors.scheduledTime && (
                     <p className="text-xs font-medium text-accent">{pickupErrors.scheduledTime}</p>
                   )}

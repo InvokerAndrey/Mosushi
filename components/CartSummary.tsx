@@ -35,9 +35,9 @@ export default function CartSummary({
           <button
             type="button"
             onClick={onClearCart}
-            className="text-xs text-secondary hover:text-accent transition-colors font-medium underline cursor-pointer"
+            className="bg-accent text-white hover:bg-accent-dark transition-colors px-4 py-1.5 rounded-lg font-semibold text-xs cursor-pointer"
           >
-            Очистить корзину
+            Очистить
           </button>
         )}
       </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { Category, SiteSettings } from "@/lib/types";
 
 function InstagramIcon({ className }: { className?: string }) {
@@ -92,9 +91,6 @@ export default function Header({
             {settings?.working_hours && (
               <div className="flex flex-col text-right text-sm">
                 <span className="font-semibold text-text">{settings.working_hours}</span>
-                <Link href="/delivery-info" className="text-xs text-secondary underline hover:text-accent">
-                  Условия доставки
-                </Link>
               </div>
             )}
             {settings?.phone && (

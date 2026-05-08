@@ -270,7 +270,7 @@ export default function HomePage() {
 
         {/* Success banner */}
         {successMessage && (
-          <section className="mb-10 rounded-xl border border-secondary bg-secondary/10 p-5">
+          <section className="mb-8 rounded-xl border border-secondary bg-secondary/10 p-5">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-secondary text-2xl">check_circle</span>
               <p className="text-base font-semibold text-secondary">{successMessage}</p>
@@ -278,17 +278,62 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Hero */}
-        <section className="mb-10 pt-6">
-          <h1 className="font-bold text-text text-4xl md:text-5xl tracking-tight mb-3">
-            Свежие суши каждый день.
-          </h1>
-          <p className="text-base text-secondary max-w-2xl leading-relaxed">
-            Ручная работа, премиальные ингредиенты, сбалансированный вкус.
-          </p>
+        {/* ── Delivery info block (replaces hero) ── */}
+        <section className="mb-10 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Free delivery */}
+            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
+              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
+                local_shipping
+              </span>
+              <div>
+                <p className="font-bold text-text text-sm">Бесплатная доставка</p>
+                <p className="text-secondary text-xs mt-1 leading-relaxed">
+                  от {FREE_DELIVERY_THRESHOLD} BYN
+                </p>
+              </div>
+            </div>
+
+            {/* Delivery cost */}
+            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
+              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
+                payments
+              </span>
+              <div>
+                <p className="font-bold text-text text-sm">Доставка {DELIVERY_FEE} BYN</p>
+                <p className="text-secondary text-xs mt-1 leading-relaxed">
+                  при заказе до {FREE_DELIVERY_THRESHOLD} BYN
+                </p>
+              </div>
+            </div>
+
+            {/* Delivery time */}
+            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
+              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
+                schedule
+              </span>
+              <div>
+                <p className="font-bold text-text text-sm">~60 минут</p>
+                <p className="text-secondary text-xs mt-1 leading-relaxed">среднее время доставки</p>
+              </div>
+            </div>
+
+            {/* Address / pickup */}
+            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
+              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
+                storefront
+              </span>
+              <div>
+                <p className="font-bold text-text text-sm">Самовывоз</p>
+                <p className="text-secondary text-xs mt-1 leading-relaxed">
+                  {siteSettings?.address ?? "Уточните адрес по телефону"}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* Menu states */}
+        {/* Menu loading / error states */}
         {isMenuLoading && (
           <p className="text-secondary text-sm mb-10">Загрузка меню…</p>
         )}
@@ -328,7 +373,6 @@ export default function HomePage() {
 
         {/* Checkout section */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16" id="checkout">
-          {/* Order summary */}
           <div className="lg:col-span-5">
             <CartSummary
               lineItems={lineItems}
@@ -341,7 +385,6 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Checkout form */}
           <CheckoutForm
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -358,10 +401,28 @@ export default function HomePage() {
             onSubmitOrder={handleSubmitOrder}
           />
         </section>
+
+        {/* ── Map section ── */}
+        <section className="mb-16">
+          <h2 className="font-bold text-text text-2xl uppercase tracking-widest mb-6 pb-2 border-b-2 border-secondary/30 inline-block">
+            Мы на карте
+          </h2>
+          <div className="w-full rounded-xl overflow-hidden shadow-md">
+            <iframe
+              src="https://yandex.ru/map-widget/v1/?um=constructor%3A7741fa06eb3d654da1cdbc987cdc536e5c8e23fb22eff75e883e6a1792e3adc6&amp;source=constructor"
+              width="100%"
+              height="480"
+              frameBorder="0"
+              title="Мы на карте"
+              className="block w-full"
+              style={{ border: 0 }}
+            />
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-background w-full mt-10">
+      <footer className="bg-primary text-background w-full">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-14 flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="text-xl font-bold tracking-widest">
             СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
@@ -379,9 +440,6 @@ export default function HomePage() {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <a className="text-background/60 hover:text-accent transition-colors" href="/delivery-info">
-                Условия доставки
-              </a>
               <a className="text-background/60 hover:text-accent transition-colors" href="#">
                 Политика конфиденциальности
               </a>
