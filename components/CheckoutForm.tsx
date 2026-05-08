@@ -215,7 +215,7 @@ export default function CheckoutForm({
                       }}
                       className="w-4 h-4 accent-accent"
                     />
-                    <span className="text-sm text-text">{method === "CASH" ? "Наличные" : "Карта"}</span>
+                    <span className="text-sm text-text">{method === "CASH" ? "Наличные" : "Картой курьеру"}</span>
                   </label>
                 ))}
               </div>

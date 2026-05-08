@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import type { SushiMenuItem } from "@/data/sushiMenu";
 import { readCartFromStorage, writeCartToStorage } from "@/lib/cart";
-import type { CartState } from "@/lib/types";
+import type { CartState, Category, MenuItem, SiteSettings } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
 import {
   validatePickupForm,
@@ -18,27 +17,32 @@ import CartSummary from "@/components/CartSummary";
 
 const DELIVERY_FEE = 6;
 const FREE_DELIVERY_THRESHOLD = 40;
-const INSTAGRAM_URL =
-  "https://www.instagram.com/anastasiya.morochko?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 
 export default function HomePage() {
+  // --- Data from API ---
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
+
+  // --- Cart ---
   const [cartItems, setCartItems] = useState<CartState>({});
   const [isCartReady, setIsCartReady] = useState(false);
+
+  // --- UI ---
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+
+  // --- Order form ---
   const [pickupErrors, setPickupErrors] = useState<Record<string, string | undefined>>({});
   const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string | undefined>>({});
   const [requestError, setRequestError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("sushi");
-  const [menuItems, setMenuItems] = useState<SushiMenuItem[]>([]);
-  const [isMenuLoading, setIsMenuLoading] = useState(true);
-  const [menuError, setMenuError] = useState("");
 
-  const sushiRef = useRef<HTMLElement>(null);
-  const setsRef = useRef<HTMLElement>(null);
-  const saucesRef = useRef<HTMLElement>(null);
-  const drinksRef = useRef<HTMLElement>(null);
+  // Ref map for IntersectionObserver — keyed by String(category.id)
+  const sectionRefsMap = useRef<Map<string, HTMLElement>>(new Map());
 
   const {
     activeTab,
@@ -50,73 +54,82 @@ export default function HomePage() {
     resetForms
   } = useCheckoutForm();
 
-  // IntersectionObserver for active section highlighting
+  // --- Fetch all data on mount ---
   useEffect(() => {
-    const sections = [
-      { ref: sushiRef, id: "sushi" },
-      { ref: setsRef, id: "sets" },
-      { ref: saucesRef, id: "sauces" },
-      { ref: drinksRef, id: "drinks" }
-    ];
+    Promise.all([
+      fetch("/categories").then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<Category[]>;
+      }),
+      fetch("/products").then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<MenuItem[]>;
+      }),
+      fetch("/site-settings").then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<SiteSettings>;
+      })
+    ])
+      .then(([cats, products, settings]) => {
+        setCategories(cats);
+        setMenuItems(products);
+        setSiteSettings(settings);
+      })
+      .catch(() => setMenuError("Не удалось загрузить меню. Убедитесь, что сервер запущен."))
+      .finally(() => setIsMenuLoading(false));
+  }, []);
+
+  // --- Set initial active section once categories load ---
+  useEffect(() => {
+    if (categories.length > 0 && !activeSection) {
+      setActiveSection(String(categories[0].id));
+    }
+  }, [categories]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- IntersectionObserver: highlight active category while scrolling ---
+  useEffect(() => {
+    if (categories.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.getAttribute("id") ?? "sushi");
-          }
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
       { rootMargin: "-80px 0px -60% 0px", threshold: 0 }
     );
 
-    sections.forEach(({ ref }) => {
-      if (ref.current) observer.observe(ref.current);
-    });
-
+    sectionRefsMap.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [categories]);
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const offset = 80;
-    const top = el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: "smooth" });
-  };
-
-  // Fetch menu from Django API on mount
-  useEffect(() => {
-    fetch("/products")
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data: SushiMenuItem[]) => setMenuItems(data))
-      .catch(() => setMenuError("Не удалось загрузить меню. Убедитесь, что сервер запущен."))
-      .finally(() => setIsMenuLoading(false));
-  }, []);
-
-  // Load cart from storage on mount
+  // --- Cart persistence ---
   useEffect(() => {
     setCartItems(readCartFromStorage());
     setIsCartReady(true);
   }, []);
 
-  // Persist cart to storage
   useEffect(() => {
     if (!isCartReady) return;
     writeCartToStorage(cartItems);
   }, [cartItems, isCartReady]);
 
-  // Build line items from cart (uses menuItems fetched from Django)
+  // --- Scroll helper ---
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  // --- Cart calculations ---
   const lineItems = useMemo(() => {
     return menuItems
       .map((item) => {
-        const quantity = cartItems[item.id] ?? 0;
+        const quantity = cartItems[String(item.id)] ?? 0;
         if (quantity === 0) return null;
         return {
-          id: item.id,
+          id: String(item.id),
           name: item.name,
           price: item.price,
           image: item.image,
@@ -144,7 +157,7 @@ export default function HomePage() {
     [cartItems]
   );
 
-  // Cart handlers
+  // --- Cart handlers ---
   const handleAddToCart = (itemId: string) => {
     setSuccessMessage("");
     setRequestError("");
@@ -153,16 +166,18 @@ export default function HomePage() {
 
   const handleRemoveFromCart = (itemId: string) => {
     setCartItems((prev) => {
-      const currentQty = prev[itemId] ?? 0;
-      if (currentQty <= 1) {
+      const qty = prev[itemId] ?? 0;
+      if (qty <= 1) {
         const { [itemId]: _removed, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [itemId]: currentQty - 1 };
+      return { ...prev, [itemId]: qty - 1 };
     });
   };
 
-  // Form submission
+  const handleClearCart = () => setCartItems({});
+
+  // --- Order submission ---
   const handleSubmitOrder = async () => {
     if (isSubmitting) return;
 
@@ -175,23 +190,17 @@ export default function HomePage() {
     setPickupErrors({});
     setDeliveryErrors({});
 
-    const isValid =
-      activeTab === "pickup"
-        ? Object.keys(validatePickupForm(pickupForm)).length === 0
-        : Object.keys(validateDeliveryForm(deliveryForm)).length === 0;
+    const pickupValidation = validatePickupForm(pickupForm);
+    const deliveryValidation = validateDeliveryForm(deliveryForm);
+    const formErrors = activeTab === "pickup" ? pickupValidation : deliveryValidation;
 
-    if (!isValid) {
-      if (activeTab === "pickup") {
-        setPickupErrors(validatePickupForm(pickupForm));
-      } else {
-        setDeliveryErrors(validateDeliveryForm(deliveryForm));
-      }
+    if (Object.keys(formErrors).length > 0) {
+      if (activeTab === "pickup") setPickupErrors(pickupValidation);
+      else setDeliveryErrors(deliveryValidation);
       return;
     }
 
     setIsSubmitting(true);
-
-    const addressString = formatDeliveryAddress(deliveryForm.address);
 
     const requestBody = {
       orderType: activeTab,
@@ -207,7 +216,7 @@ export default function HomePage() {
       delivery: {
         name: deliveryForm.name,
         phoneNumber: deliveryForm.phoneNumber,
-        address: addressString,
+        address: formatDeliveryAddress(deliveryForm.address),
         paymentMethod: deliveryForm.paymentMethod,
         changeAmount: deliveryForm.changeAmount,
         noChange: deliveryForm.noChange,
@@ -252,6 +261,9 @@ export default function HomePage() {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         onScrollToSection={scrollToSection}
+        onCartClick={() => scrollToSection("checkout")}
+        categories={categories}
+        settings={siteSettings}
       />
 
       <main className="flex-grow max-w-[1200px] mx-auto w-full px-4 md:px-8 py-10">
@@ -276,7 +288,7 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* Menu — loading / error / content states */}
+        {/* Menu states */}
         {isMenuLoading && (
           <p className="text-secondary text-sm mb-10">Загрузка меню…</p>
         )}
@@ -287,57 +299,36 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Dynamic menu sections — one per category from DB */}
         {!isMenuLoading && !menuError && (
           <>
-            <MenuSection
-              ref={sushiRef}
-              id="sushi"
-              title="Суши"
-              items={menuItems.filter((i) => i.category === "sushi")}
-              cartItems={cartItems}
-              onAddToCart={handleAddToCart}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
-            <hr className="border-t border-secondary/20 mb-4" />
-
-            <MenuSection
-              ref={setsRef}
-              id="sets"
-              title="Сеты"
-              items={menuItems.filter((i) => i.category === "sets")}
-              cartItems={cartItems}
-              onAddToCart={handleAddToCart}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
-            <hr className="border-t border-secondary/20 mb-4" />
-
-            <MenuSection
-              ref={saucesRef}
-              id="sauces"
-              title="Соусы"
-              items={menuItems.filter((i) => i.category === "sauces")}
-              cartItems={cartItems}
-              onAddToCart={handleAddToCart}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
-            <hr className="border-t border-secondary/20 mb-4" />
-
-            <MenuSection
-              ref={drinksRef}
-              id="drinks"
-              title="Напитки"
-              items={menuItems.filter((i) => i.category === "drinks")}
-              cartItems={cartItems}
-              onAddToCart={handleAddToCart}
-              onRemoveFromCart={handleRemoveFromCart}
-            />
+            {categories.map((cat, index) => (
+              <div key={cat.id}>
+                <MenuSection
+                  ref={(el) => {
+                    if (el) sectionRefsMap.current.set(String(cat.id), el);
+                    else sectionRefsMap.current.delete(String(cat.id));
+                  }}
+                  id={String(cat.id)}
+                  title={cat.name}
+                  items={menuItems.filter((item) => item.category_id === cat.id)}
+                  cartItems={cartItems}
+                  onAddToCart={handleAddToCart}
+                  onRemoveFromCart={handleRemoveFromCart}
+                />
+                {index < categories.length - 1 && (
+                  <hr className="border-t border-secondary/20 mb-4" />
+                )}
+              </div>
+            ))}
           </>
         )}
+
         <hr className="border-t border-secondary/20 mb-10" />
 
-        {/* Checkout section — CartSummary LEFT on desktop, first on mobile */}
+        {/* Checkout section */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16" id="checkout">
-          {/* Order summary — col 5, left on desktop, top on mobile */}
+          {/* Order summary */}
           <div className="lg:col-span-5">
             <CartSummary
               lineItems={lineItems}
@@ -346,10 +337,11 @@ export default function HomePage() {
               activeTab={activeTab}
               onIncreaseItem={handleAddToCart}
               onDecreaseItem={handleRemoveFromCart}
+              onClearCart={handleClearCart}
             />
           </div>
 
-          {/* Checkout form — col 7, right on desktop, bottom on mobile */}
+          {/* Checkout form */}
           <CheckoutForm
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -371,11 +363,20 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-primary text-background w-full mt-10">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-14 flex flex-col md:flex-row justify-between items-start gap-8">
-          <div className="text-xl font-bold tracking-widest">SushiMō</div>
+          <div className="text-xl font-bold tracking-widest">
+            СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
+          </div>
 
           <div className="flex flex-col md:flex-row gap-8 lg:gap-16 text-sm">
             <div className="flex flex-col gap-2">
-              <span className="text-background/60">Часы работы: 11:00 – 23:00</span>
+              {siteSettings?.working_hours && (
+                <span className="text-background/60">
+                  Часы работы: {siteSettings.working_hours}
+                </span>
+              )}
+              {siteSettings?.address && (
+                <span className="text-background/60">{siteSettings.address}</span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <a className="text-background/60 hover:text-accent transition-colors" href="/delivery-info">
@@ -384,19 +385,21 @@ export default function HomePage() {
               <a className="text-background/60 hover:text-accent transition-colors" href="#">
                 Политика конфиденциальности
               </a>
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-background/60 hover:text-accent transition-colors"
-              >
-                Наш инстаграм
-              </a>
+              {siteSettings?.instagram && (
+                <a
+                  href={siteSettings.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-background/60 hover:text-accent transition-colors"
+                >
+                  Наш инстаграм
+                </a>
+              )}
             </div>
           </div>
 
           <div className="text-background/40 text-xs">
-            © 2024 SushiMō. PRECISION IN EVERY ROLL.
+            © 2024 СУШИМÕ. PRECISION IN EVERY ROLL.
           </div>
         </div>
       </footer>

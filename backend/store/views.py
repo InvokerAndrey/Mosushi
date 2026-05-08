@@ -4,27 +4,46 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Product
+from .models import Category, Product, SiteSettings
 from .services import OrderValidationError, create_order
 
 
 @require_GET
+def categories_list(request):
+    categories = list(Category.objects.values("id", "name"))
+    return JsonResponse(categories, safe=False)
+
+
+@require_GET
 def products_list(request):
-    products = Product.objects.filter(available=True).values(
-        "slug", "name", "price", "ingredients", "image", "category"
-    )
+    qs = Product.objects.filter(available=True).select_related("category")
     data = [
         {
-            "id": p["slug"],
-            "name": p["name"],
-            "price": float(p["price"]),
-            "ingredients": p["ingredients"],
-            "image": p["image"],
-            "category": p["category"],
+            "id": p.id,
+            "name": p.name,
+            "price": float(p.price),
+            "description": p.description,
+            "weight": p.weight,
+            "image": p.image.url if p.image else "",
+            "category_id": p.category_id,
+            "is_new": p.is_new,
         }
-        for p in products
+        for p in qs
     ]
     return JsonResponse(data, safe=False)
+
+
+@require_GET
+def site_settings(request):
+    obj = SiteSettings.objects.first()
+    if not obj:
+        return JsonResponse({"phone": "", "instagram": "", "working_hours": "", "address": ""})
+    return JsonResponse({
+        "phone": obj.phone,
+        "instagram": obj.instagram,
+        "working_hours": obj.working_hours,
+        "address": obj.address,
+    })
 
 
 @csrf_exempt

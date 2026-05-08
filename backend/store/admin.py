@@ -1,14 +1,45 @@
 from django.contrib import admin
-from .models import Order, Product
+from django.utils.html import format_html
+
+from .models import Category, Order, Product, SiteSettings
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("id", "name")
+    search_fields = ("name",)
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "price", "category", "available")
-    list_filter = ("category", "available")
+    list_display = ("name", "category", "price", "weight", "available", "is_new", "image_preview")
+    list_filter = ("category", "available", "is_new")
     search_fields = ("name",)
-    list_editable = ("available",)
-    prepopulated_fields = {"slug": ("name",)}
+    list_editable = ("available", "is_new")
+
+    @admin.display(description="Фото")
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height:50px;border-radius:4px;" />',
+                obj.image.url,
+            )
+        return "—"
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    """
+    Singleton admin — only one SiteSettings record is allowed.
+    Adding is blocked when a record already exists.
+    Deletion is blocked to prevent accidental removal.
+    """
+
+    def has_add_permission(self, request):
+        return not SiteSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Order)
@@ -17,7 +48,9 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ("status",)
     search_fields = ("customer_name", "phone")
     list_editable = ("status",)
-    readonly_fields = ("order_type", "customer_name", "phone", "address", "items",
-                       "total_price", "payment_method", "change_amount", "no_change",
-                       "order_time", "scheduled_time", "comment", "created_at")
+    readonly_fields = (
+        "order_type", "customer_name", "phone", "address", "items",
+        "total_price", "payment_method", "change_amount", "no_change",
+        "order_time", "scheduled_time", "comment", "created_at",
+    )
     ordering = ("-created_at",)

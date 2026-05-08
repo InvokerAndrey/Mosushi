@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Доставка — SushiMō",
-  description: "Информация о доставке SushiMō"
+  title: "Доставка — СУШИМÕ",
+  description: "Информация о доставке СУШИМÕ"
 };
 
 export default function DeliveryInfoPage() {

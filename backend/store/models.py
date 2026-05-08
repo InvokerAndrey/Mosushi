@@ -1,32 +1,67 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
-class Product(models.Model):
-    CATEGORY_CHOICES = [
-        ("sushi", "Суши"),
-        ("sets", "Сеты"),
-        ("sauces", "Соусы"),
-        ("drinks", "Напитки"),
-    ]
-
-    # "slug" is the cart key used in the frontend (e.g. "salmon-delight")
-    slug = models.SlugField(unique=True)
-    name = models.CharField(max_length=200)
-    price = models.DecimalField(max_digits=8, decimal_places=2)
-    # ingredients stored as a JSON list: ["Salmon", "Avocado", ...]
-    ingredients = models.JSONField(default=list)
-    # relative URL path served by Next.js, e.g. "/sushi/salmon-delight.svg"
-    image = models.CharField(max_length=500)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    available = models.BooleanField(default=True)
+class Category(models.Model):
+    name = models.CharField("Название", max_length=100)
 
     class Meta:
-        ordering = ["category", "name"]
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
+        ordering = ["id"]
+
+    def __str__(self):
+        return self.name
+
+
+class Product(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Категория",
+        related_name="products",
+    )
+    name = models.CharField("Название", max_length=200)
+    price = models.DecimalField("Цена", max_digits=8, decimal_places=2)
+    description = models.TextField("Описание / ингредиенты", blank=True)
+    weight = models.CharField("Вес / объем", max_length=50, blank=True)
+    image = models.ImageField("Изображение", upload_to="products/")
+    available = models.BooleanField("В наличии", default=True)
+    is_new = models.BooleanField("Новинка", default=False)
+    created_at = models.DateTimeField("Дата добавления", auto_now_add=True)
+
+    class Meta:
+        # Products marked as "Новинка" appear first, then sorted alphabetically
+        ordering = ["-is_new", "name"]
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"
 
     def __str__(self):
         return self.name
+
+
+class SiteSettings(models.Model):
+    """
+    Singleton model for editable site-wide settings.
+    Only one instance can exist — managed via Django Admin.
+    """
+    phone = models.CharField("Телефон", max_length=50)
+    instagram = models.URLField("Instagram", blank=True)
+    working_hours = models.CharField("Время работы", max_length=100)
+    address = models.CharField("Адрес", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "Настройки сайта"
+        verbose_name_plural = "Настройки сайта"
+
+    def __str__(self):
+        return "Настройки сайта"
+
+    def clean(self):
+        if not self.pk and SiteSettings.objects.exists():
+            raise ValidationError("Можно создать только одну запись настроек сайта.")
 
 
 class Order(models.Model):
@@ -40,29 +75,26 @@ class Order(models.Model):
         ("delivery", "Доставка"),
     ]
 
-    order_type = models.CharField(max_length=10, choices=ORDER_TYPE_CHOICES)
-    customer_name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=50)
-    # address is empty string for pickup orders
-    address = models.TextField(blank=True)
+    order_type = models.CharField("Тип заказа", max_length=10, choices=ORDER_TYPE_CHOICES)
+    customer_name = models.CharField("Имя клиента", max_length=200)
+    phone = models.CharField("Телефон", max_length=50)
+    # Empty string for pickup orders
+    address = models.TextField("Адрес доставки", blank=True)
 
     # Full cart snapshot: [{"name": ..., "quantity": ..., "price": ..., "lineTotal": ...}]
-    items = models.JSONField()
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    items = models.JSONField("Состав заказа")
+    total_price = models.DecimalField("Сумма", max_digits=10, decimal_places=2)
 
-    # Payment details (relevant for delivery orders)
-    payment_method = models.CharField(max_length=10, blank=True)  # "CASH" | "CARD" | ""
-    change_amount = models.CharField(max_length=50, blank=True)
-    no_change = models.BooleanField(default=False)
+    payment_method = models.CharField("Способ оплаты", max_length=10, blank=True)
+    change_amount = models.CharField("Сдача с", max_length=50, blank=True)
+    no_change = models.BooleanField("Без сдачи", default=False)
 
-    # Scheduling
-    order_time = models.CharField(max_length=10, default="asap")  # "asap" | "specific"
-    scheduled_time = models.CharField(max_length=100, blank=True)
+    order_time = models.CharField("Время заказа", max_length=10, default="asap")
+    scheduled_time = models.CharField("Запланированное время", max_length=100, blank=True)
 
-    comment = models.TextField(blank=True)
-
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
-    created_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField("Комментарий", blank=True)
+    status = models.CharField("Статус", max_length=20, choices=STATUS_CHOICES, default="new")
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]

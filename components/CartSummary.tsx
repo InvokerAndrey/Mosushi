@@ -11,6 +11,7 @@ type CartSummaryProps = {
   activeTab: CheckoutTab;
   onIncreaseItem: (itemId: string) => void;
   onDecreaseItem: (itemId: string) => void;
+  onClearCart: () => void;
 };
 
 export default function CartSummary({
@@ -19,14 +20,27 @@ export default function CartSummary({
   deliveryFee,
   activeTab,
   onIncreaseItem,
-  onDecreaseItem
+  onDecreaseItem,
+  onClearCart
 }: CartSummaryProps) {
   const grandTotal = subtotalPrice + deliveryFee;
   const isDelivery = activeTab === "delivery";
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
-      <h3 className="font-bold text-text text-lg uppercase tracking-widest mb-5">Ваш заказ</h3>
+      {/* Header row: title + clear button */}
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="font-bold text-text text-lg uppercase tracking-widest">Ваш заказ</h3>
+        {lineItems.length > 0 && (
+          <button
+            type="button"
+            onClick={onClearCart}
+            className="text-xs text-secondary hover:text-accent transition-colors font-medium underline cursor-pointer"
+          >
+            Очистить корзину
+          </button>
+        )}
+      </div>
 
       {lineItems.length === 0 ? (
         <div className="text-center py-10 text-secondary">
@@ -67,9 +81,7 @@ export default function CartSummary({
                   )}
                 </div>
                 {deliveryFee > 0 && subtotalPrice < 40 && (
-                  <p className="text-xs text-secondary/70">
-                    Бесплатная доставка от 40 BYN
-                  </p>
+                  <p className="text-xs text-secondary/70">Бесплатная доставка от 40 BYN</p>
                 )}
               </>
             )}

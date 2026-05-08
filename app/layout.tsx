@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SushiMō — Premium Sushi Delivery",
-  description: "Fresh premium sushi delivery. Precision in every roll."
+  title: "СУШИМÕ — Доставка суши",
+  description: "Свежие суши каждый день. Ручная работа, премиальные ингредиенты."
 };
 
 type RootLayoutProps = {

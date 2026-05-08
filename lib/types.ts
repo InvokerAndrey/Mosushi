@@ -1,6 +1,6 @@
-import type { SushiMenuItem } from "@/data/sushiMenu";
+// Cart types
+export type CartState = Record<string, number>;
 
-// Shared types used across components
 export type CartLineItem = {
   id: string;
   name: string;
@@ -10,10 +10,27 @@ export type CartLineItem = {
   lineTotal: number;
 };
 
-export type CartState = Record<string, number>;
+// API types — match Django backend response shapes
 
-export type MenuSection = {
-  id: SushiMenuItem["category"];
-  title: string;
-  items: SushiMenuItem[];
+export type Category = {
+  id: number;
+  name: string;
+};
+
+export type MenuItem = {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  weight: string;
+  image: string;
+  category_id: number;
+  is_new: boolean;
+};
+
+export type SiteSettings = {
+  phone: string;
+  instagram: string;
+  working_hours: string;
+  address: string;
 };

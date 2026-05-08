@@ -62,7 +62,7 @@ def build_order_message(order) -> str:
             f"📍 <b>Адрес:</b> {_esc(order.address)}",
             "",
         ]
-        payment_label = "Наличные" if order.payment_method == "CASH" else "Карта"
+        payment_label = "Наличные" if order.payment_method == "CASH" else "Картой курьеру"
         lines.append(f"💳 <b>Оплата:</b> {payment_label}")
 
         if order.payment_method == "CASH":

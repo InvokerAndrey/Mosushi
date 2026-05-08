@@ -22,6 +22,9 @@ def create_order(body: dict) -> Order:
     """
     Validate, persist, and notify for a new order.
 
+    Cart keys are string product IDs (e.g. {"1": 2, "3": 1}).
+    Prices always come from the database — never from the client.
+
     Args:
         body: Parsed JSON payload from the POST /order request.
 
@@ -48,15 +51,23 @@ def create_order(body: dict) -> Order:
         raise OrderValidationError("totalPrice must be a number.")
 
     # --- Build line items — prices always come from the DB, never the client ---
-    slugs = [slug for slug, qty in cart_items.items() if isinstance(qty, int) and qty > 0]
-    db_products = {p.slug: p for p in Product.objects.filter(slug__in=slugs, available=True)}
+    entries = [
+        (int(pid), qty)
+        for pid, qty in cart_items.items()
+        if str(pid).isdigit() and isinstance(qty, int) and qty > 0
+    ]
+
+    if not entries:
+        raise OrderValidationError("Cart contains no valid products.")
+
+    product_ids = [pid for pid, _ in entries]
+    db_products = {p.id: p for p in Product.objects.filter(id__in=product_ids, available=True)}
 
     line_items = []
-    for slug in slugs:
-        product = db_products.get(slug)
+    for product_id, qty in entries:
+        product = db_products.get(product_id)
         if not product:
             continue
-        qty = cart_items[slug]
         line_items.append({
             "name": product.name,
             "quantity": qty,
@@ -83,7 +94,7 @@ def create_order(body: dict) -> Order:
     except InvalidOperation:
         raise OrderValidationError("totalPrice is not a valid number.")
 
-    # --- Order-type-specific validation and Object construction ---
+    # --- Order-type-specific validation and object construction ---
     if order_type == "pickup":
         if not pickup.get("name", "").strip():
             raise OrderValidationError("Pickup: name is required.")

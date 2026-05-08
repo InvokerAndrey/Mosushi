@@ -1,14 +1,13 @@
 "use client";
 
 import { forwardRef } from "react";
-import type { SushiMenuItem } from "@/data/sushiMenu";
+import type { MenuItem, CartState } from "@/lib/types";
 import SushiMenuCard from "./SushiMenuCard";
-import type { CartState } from "@/lib/types";
 
 type MenuSectionProps = {
   id: string;
   title: string;
-  items: SushiMenuItem[];
+  items: MenuItem[];
   cartItems: CartState;
   onAddToCart: (itemId: string) => void;
   onRemoveFromCart: (itemId: string) => void;
@@ -26,7 +25,7 @@ const MenuSection = forwardRef<HTMLElement, MenuSectionProps>(
             <SushiMenuCard
               key={item.id}
               item={item}
-              quantityInCart={cartItems[item.id] ?? 0}
+              quantityInCart={cartItems[String(item.id)] ?? 0}
               onAddToCart={onAddToCart}
               onRemoveFromCart={onRemoveFromCart}
             />
