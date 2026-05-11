@@ -1,12 +1,13 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Category, Order, Product, SiteSettings
+from .models import Category, InfoBlock, Order, Product, SiteSettings
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
+    list_display = ("id", "name", "available")
+    list_editable = ("available",)
     search_fields = ("name",)
 
 
@@ -40,6 +41,16 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(InfoBlock)
+class InfoBlockAdmin(admin.ModelAdmin):
+    list_display = ("order", "title", "icon", "type", "is_active")
+    list_display_links = ("title",)
+    list_editable = ("order", "is_active")
+    list_filter = ("type", "is_active")
+    search_fields = ("title",)
+    ordering = ("order",)
 
 
 @admin.register(Order)

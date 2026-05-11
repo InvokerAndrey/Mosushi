@@ -4,13 +4,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Category, Product, SiteSettings
+from .models import Category, InfoBlock, Product, SiteSettings
 from .services import OrderValidationError, create_order
 
 
 @require_GET
 def categories_list(request):
-    categories = list(Category.objects.values("id", "name"))
+    categories = list(Category.objects.filter(available=True).values("id", "name"))
     return JsonResponse(categories, safe=False)
 
 
@@ -63,6 +63,16 @@ def create_order_view(request):
         return _error(str(exc), 400)
 
     return JsonResponse({"message": "Order received successfully.", "orderId": order.pk}, status=201)
+
+
+@require_GET
+def info_blocks_list(request):
+    blocks = list(
+        InfoBlock.objects.filter(is_active=True).order_by("order").values(
+            "id", "title", "text", "icon", "type", "order"
+        )
+    )
+    return JsonResponse(blocks, safe=False)
 
 
 def _error(message: str, status: int) -> JsonResponse:

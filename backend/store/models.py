@@ -4,6 +4,7 @@ from django.db import models
 
 class Category(models.Model):
     name = models.CharField("Название", max_length=100)
+    available = models.BooleanField("В наличии", default=True)
 
     class Meta:
         verbose_name = "Категория"
@@ -62,6 +63,38 @@ class SiteSettings(models.Model):
     def clean(self):
         if not self.pk and SiteSettings.objects.exists():
             raise ValidationError("Можно создать только одну запись настроек сайта.")
+
+
+class InfoBlock(models.Model):
+    ICON_CHOICES = [
+        ("local_shipping", "Доставка"),
+        ("schedule", "Время"),
+        ("storefront", "Самовывоз"),
+        ("payments", "Оплата"),
+        ("percent", "Скидка"),
+        ("local_fire_department", "Горячее предложение"),
+    ]
+    TYPE_CHOICES = [
+        ("info", "Информация"),
+        ("promo", "Акция"),
+    ]
+
+    title = models.CharField("Заголовок", max_length=200)
+    text = models.CharField("Дополнительный текст", max_length=300, blank=True)
+    icon = models.CharField("Иконка", max_length=100, choices=ICON_CHOICES)
+    type = models.CharField("Тип", max_length=10, choices=TYPE_CHOICES, default="info")
+    is_active = models.BooleanField("Активен", default=True)
+    order = models.PositiveIntegerField("Порядок", default=0)
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    updated_at = models.DateTimeField("Дата обновления", auto_now=True)
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Инфо-блок"
+        verbose_name_plural = "Инфо-блоки"
+
+    def __str__(self):
+        return self.title
 
 
 class Order(models.Model):

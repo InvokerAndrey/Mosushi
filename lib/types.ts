@@ -34,3 +34,12 @@ export type SiteSettings = {
   working_hours: string;
   address: string;
 };
+
+export type InfoBlock = {
+  id: number;
+  title: string;
+  text: string;
+  icon: string;
+  type: "info" | "promo";
+  order: number;
+};

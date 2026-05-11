@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       { source: "/categories", destination: `${DJANGO_API}/categories/` },
       { source: "/products", destination: `${DJANGO_API}/products/` },
       { source: "/site-settings", destination: `${DJANGO_API}/site-settings/` },
+      { source: "/info-blocks", destination: `${DJANGO_API}/info-blocks/` },
       { source: "/order", destination: `${DJANGO_API}/order/` },
       { source: "/media/:path*", destination: `${DJANGO_API}/media/:path*` },
     ];

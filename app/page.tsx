@@ -14,6 +14,7 @@ import Header from "@/components/Header";
 import MenuSection from "@/components/MenuSection";
 import CheckoutForm from "@/components/CheckoutForm";
 import CartSummary from "@/components/CartSummary";
+import InfoBlocks from "@/components/InfoBlocks";
 
 const DELIVERY_FEE = 6;
 const FREE_DELIVERY_THRESHOLD = 40;
@@ -278,60 +279,8 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* ── Delivery info block (replaces hero) ── */}
-        <section className="mb-10 pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Free delivery */}
-            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
-              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
-                local_shipping
-              </span>
-              <div>
-                <p className="font-bold text-text text-sm">Бесплатная доставка</p>
-                <p className="text-secondary text-xs mt-1 leading-relaxed">
-                  от {FREE_DELIVERY_THRESHOLD} BYN
-                </p>
-              </div>
-            </div>
-
-            {/* Delivery cost */}
-            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
-              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
-                payments
-              </span>
-              <div>
-                <p className="font-bold text-text text-sm">Доставка {DELIVERY_FEE} BYN</p>
-                <p className="text-secondary text-xs mt-1 leading-relaxed">
-                  при заказе до {FREE_DELIVERY_THRESHOLD} BYN
-                </p>
-              </div>
-            </div>
-
-            {/* Delivery time */}
-            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
-              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
-                schedule
-              </span>
-              <div>
-                <p className="font-bold text-text text-sm">~60 минут</p>
-                <p className="text-secondary text-xs mt-1 leading-relaxed">среднее время доставки</p>
-              </div>
-            </div>
-
-            {/* Address / pickup */}
-            <div className="bg-white rounded-xl shadow-sm border border-secondary/10 p-5 flex items-start gap-4">
-              <span className="material-symbols-outlined text-accent text-3xl mt-0.5 shrink-0">
-                storefront
-              </span>
-              <div>
-                <p className="font-bold text-text text-sm">Самовывоз</p>
-                <p className="text-secondary text-xs mt-1 leading-relaxed">
-                  {siteSettings?.address ?? "Уточните адрес по телефону"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ── Dynamic info/promo blocks from DB ── */}
+        <InfoBlocks />
 
         {/* Menu loading / error states */}
         {isMenuLoading && (
