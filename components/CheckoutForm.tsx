@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
 import type { CheckoutTab, PickupFormState, DeliveryFormState } from "@/lib/validations";
 import { formatPhoneNumber } from "@/lib/validations";
+import TimePickerField from "@/components/TimePickerField";
 
 type CheckoutFormProps = {
   activeTab: CheckoutTab;
@@ -19,46 +19,6 @@ type CheckoutFormProps = {
   isSubmitting: boolean;
   onSubmitOrder: () => void;
 };
-
-type TimeSlot = { value: string; label: string };
-
-/**
- * Generates 15-minute time slots starting from `minOffsetMinutes` from now.
- * The first slot is rounded UP to the next 15-min interval.
- * Covers today + 2 days ahead, stopping at 23:45.
- */
-function generateTimeSlots(minOffsetMinutes: number): TimeSlot[] {
-  const STEP = 15 * 60 * 1000;
-  const minTime = new Date(Math.ceil((Date.now() + minOffsetMinutes * 60_000) / STEP) * STEP);
-
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const end = new Date(now);
-  end.setDate(end.getDate() + 2);
-  end.setHours(23, 45, 0, 0);
-
-  const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
-  const slots: TimeSlot[] = [];
-  const cur = new Date(minTime);
-
-  while (cur <= end) {
-    const hh = cur.getHours().toString().padStart(2, "0");
-    const mm = cur.getMinutes().toString().padStart(2, "0");
-
-    let day: string;
-    if (cur.toDateString() === now.toDateString()) day = "Сегодня";
-    else if (cur.toDateString() === tomorrow.toDateString()) day = "Завтра";
-    else day = `${cur.getDate()} ${MONTHS[cur.getMonth()]}`;
-
-    const label = `${day}, ${hh}:${mm}`;
-    slots.push({ value: label, label });
-    cur.setTime(cur.getTime() + STEP);
-  }
-
-  return slots;
-}
 
 function getInputClassName(hasError?: boolean) {
   const base =
@@ -79,12 +39,8 @@ export default function CheckoutForm({
   setDeliveryErrors,
   requestError,
   isSubmitting,
-  onSubmitOrder
+  onSubmitOrder,
 }: CheckoutFormProps) {
-  // Pre-generate slots once per render cycle (refreshes if component re-renders)
-  const deliverySlots = useMemo(() => generateTimeSlots(60), []);
-  const pickupSlots = useMemo(() => generateTimeSlots(30), []);
-
   const handlePhoneChange = (value: string, isPickup: boolean) => {
     const formatted = formatPhoneNumber(value);
     if (isPickup) {
@@ -202,7 +158,7 @@ export default function CheckoutForm({
                 { key: "houseNumber", label: "Дом" },
                 { key: "apartment", label: "Кв." },
                 { key: "entrance", label: "Подъезд" },
-                { key: "floor", label: "Этаж" }
+                { key: "floor", label: "Этаж" },
               ] as const).map(({ key, label }) => (
                 <div key={key} className="flex flex-col gap-1">
                   <label className="text-xs font-semibold text-secondary uppercase tracking-wider">{label}</label>
@@ -216,7 +172,11 @@ export default function CheckoutForm({
                       }
                     }}
                     className={getInputClassName(
-                      key === "houseNumber" ? !!deliveryErrors.houseNumber : key === "apartment" ? !!deliveryErrors.apartment : false
+                      key === "houseNumber"
+                        ? !!deliveryErrors.houseNumber
+                        : key === "apartment"
+                        ? !!deliveryErrors.apartment
+                        : false
                     )}
                     maxLength={10}
                   />
@@ -246,13 +206,19 @@ export default function CheckoutForm({
                           ...prev,
                           paymentMethod: method,
                           changeAmount: "",
-                          noChange: false
+                          noChange: false,
                         }));
-                        setDeliveryErrors((prev) => ({ ...prev, paymentMethod: undefined, changeAmount: undefined }));
+                        setDeliveryErrors((prev) => ({
+                          ...prev,
+                          paymentMethod: undefined,
+                          changeAmount: undefined,
+                        }));
                       }}
                       className="w-4 h-4 accent-accent"
                     />
-                    <span className="text-sm text-text">{method === "CASH" ? "Наличные" : "Картой курьеру"}</span>
+                    <span className="text-sm text-text">
+                      {method === "CASH" ? "Наличные" : "Картой курьеру"}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -271,7 +237,7 @@ export default function CheckoutForm({
                         setDeliveryForm((prev) => ({
                           ...prev,
                           noChange: e.target.checked,
-                          changeAmount: e.target.checked ? "" : prev.changeAmount
+                          changeAmount: e.target.checked ? "" : prev.changeAmount,
                         }));
                         setDeliveryErrors((prev) => ({ ...prev, changeAmount: undefined }));
                       }}
@@ -281,7 +247,9 @@ export default function CheckoutForm({
                   </label>
                   {!deliveryForm.noChange && (
                     <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Сдача с</label>
+                      <label className="text-xs font-semibold text-secondary uppercase tracking-wider">
+                        Сдача с
+                      </label>
                       <input
                         type="text"
                         value={deliveryForm.changeAmount}
@@ -304,7 +272,9 @@ export default function CheckoutForm({
 
             {/* Delivery time */}
             <div className="flex flex-col gap-3 border-t border-secondary/20 pt-5">
-              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Время доставки</label>
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">
+                Время доставки
+              </label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -334,30 +304,29 @@ export default function CheckoutForm({
                 </label>
               </div>
               {deliveryForm.orderTime === "specific" && (
-                <div className="flex flex-col gap-1">
-                  <select
+                <>
+                  <TimePickerField
+                    minOffsetMinutes={60}
+                    workEnd={{ hour: 21, minute: 30 }}
                     value={deliveryForm.scheduledTime}
-                    onChange={(e) => {
-                      setDeliveryForm((prev) => ({ ...prev, scheduledTime: e.target.value }));
+                    onChange={(val) => {
+                      setDeliveryForm((prev) => ({ ...prev, scheduledTime: val }));
                       setDeliveryErrors((prev) => ({ ...prev, scheduledTime: undefined }));
                     }}
-                    className={getInputClassName(!!deliveryErrors.scheduledTime)}
-                  >
-                    <option value="">Выберите время</option>
-                    {deliverySlots.map((slot) => (
-                      <option key={slot.value} value={slot.value}>{slot.label}</option>
-                    ))}
-                  </select>
+                    hasError={!!deliveryErrors.scheduledTime}
+                  />
                   {deliveryErrors.scheduledTime && (
                     <p className="text-xs font-medium text-accent">{deliveryErrors.scheduledTime}</p>
                   )}
-                </div>
+                </>
               )}
             </div>
 
             {/* Comment */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Комментарий к заказу</label>
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">
+                Комментарий к заказу
+              </label>
               <textarea
                 className="w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all p-3 text-sm text-text min-h-[80px] resize-none"
                 placeholder="Пожелания к заказу..."
@@ -377,7 +346,9 @@ export default function CheckoutForm({
           <>
             {/* Pickup time */}
             <div className="flex flex-col gap-3">
-              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Время самовывоза</label>
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">
+                Время самовывоза
+              </label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -407,30 +378,28 @@ export default function CheckoutForm({
                 </label>
               </div>
               {pickupForm.orderTime === "specific" && (
-                <div className="flex flex-col gap-1">
-                  <select
+                <>
+                  <TimePickerField
+                    minOffsetMinutes={30}
                     value={pickupForm.scheduledTime}
-                    onChange={(e) => {
-                      setPickupForm((prev) => ({ ...prev, scheduledTime: e.target.value }));
+                    onChange={(val) => {
+                      setPickupForm((prev) => ({ ...prev, scheduledTime: val }));
                       setPickupErrors((prev) => ({ ...prev, scheduledTime: undefined }));
                     }}
-                    className={getInputClassName(!!pickupErrors.scheduledTime)}
-                  >
-                    <option value="">Выберите время</option>
-                    {pickupSlots.map((slot) => (
-                      <option key={slot.value} value={slot.value}>{slot.label}</option>
-                    ))}
-                  </select>
+                    hasError={!!pickupErrors.scheduledTime}
+                  />
                   {pickupErrors.scheduledTime && (
                     <p className="text-xs font-medium text-accent">{pickupErrors.scheduledTime}</p>
                   )}
-                </div>
+                </>
               )}
             </div>
 
             {/* Comment */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Комментарий к заказу</label>
+              <label className="text-xs font-semibold text-secondary uppercase tracking-wider">
+                Комментарий к заказу
+              </label>
               <textarea
                 className="w-full bg-background border border-secondary/40 rounded-lg focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none transition-all p-3 text-sm text-text min-h-[80px] resize-none"
                 placeholder="Пожелания к заказу..."

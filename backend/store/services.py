@@ -7,6 +7,7 @@ import logging
 from decimal import Decimal, InvalidOperation
 
 from .constants import DELIVERY_FEE, FREE_DELIVERY_THRESHOLD
+from .email_service import send_order_email
 from .models import Order, Product
 from .telegram import send_order_to_telegram
 
@@ -144,5 +145,9 @@ def create_order(body: dict) -> Order:
     # --- Telegram notification (never blocks or cancels the order on failure) ---
     if not send_order_to_telegram(order):
         logger.warning("Order #%d saved, but Telegram notification failed.", order.pk)
+
+    # --- Email notification (never blocks or cancels the order on failure) ---
+    if not send_order_email(order):
+        logger.warning("Order #%d saved, but email notification failed.", order.pk)
 
     return order

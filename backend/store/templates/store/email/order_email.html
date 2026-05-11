@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Заказ #{{ order.pk }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background: #f5f5f5; color: #333; }
+    .wrapper { max-width: 620px; margin: 32px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    /* Header */
+    .header { background: #1a1a1a; padding: 28px 32px; text-align: center; }
+    .header h1 { color: #ffffff; font-size: 22px; letter-spacing: 1px; }
+    .header .order-num { color: #e8b84b; font-size: 28px; font-weight: bold; margin-top: 6px; }
+
+    /* Body */
+    .body { padding: 28px 32px; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888;
+      margin: 24px 0 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 6px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .info-grid { display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; }
+    .info-label { color: #888; font-size: 14px; }
+    .info-value { color: #222; font-size: 14px; font-weight: 500; }
+
+    /* Items table */
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    th { background: #f9f9f9; text-align: left; font-size: 13px; color: #888; font-weight: 600; padding: 8px 10px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+    td { padding: 9px 10px; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .qty { color: #888; font-size: 13px; }
+    .line-total { font-weight: 600; text-align: right; white-space: nowrap; }
+    .col-price { text-align: right; white-space: nowrap; color: #555; }
+    .col-qty { text-align: center; width: 50px; }
+
+    /* Total row */
+    .total-row { background: #f9f9f9; }
+    .total-row td { border-top: 2px solid #e8b84b; font-weight: bold; font-size: 15px; }
+
+    /* Footer */
+    .footer { background: #1a1a1a; padding: 16px 32px; text-align: center; }
+    .footer p { color: #666; font-size: 12px; }
+    .footer span { color: #e8b84b; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>🍣 СУШИМÕ — Новый заказ</h1>
+      <div class="order-num">#{{ order.pk }}</div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- Meta -->
+      <div class="section-title">Информация о заказе</div>
+      <div class="info-grid">
+        <span class="info-label">Дата / время:</span>
+        <span class="info-value">{{ created_at_local }}</span>
+
+        <span class="info-label">Тип:</span>
+        <span class="info-value">{{ order_type_display }}</span>
+
+        <span class="info-label">Время доставки:</span>
+        <span class="info-value">{{ scheduled_display }}</span>
+      </div>
+
+      <!-- Client -->
+      <div class="section-title">Клиент</div>
+      <div class="info-grid">
+        <span class="info-label">Имя:</span>
+        <span class="info-value">{{ order.customer_name }}</span>
+
+        <span class="info-label">Телефон:</span>
+        <span class="info-value">{{ order.phone }}</span>
+
+        {% if order.order_type == "delivery" %}
+        <span class="info-label">Адрес:</span>
+        <span class="info-value">{{ order.address }}</span>
+
+        <span class="info-label">Оплата:</span>
+        <span class="info-value">{{ payment_display }}</span>
+        {% endif %}
+
+        {% if order.comment %}
+        <span class="info-label">Комментарий:</span>
+        <span class="info-value">{{ order.comment }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Items -->
+      <div class="section-title">Состав заказа</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Наименование</th>
+            <th class="col-qty">Кол-во</th>
+            <th style="text-align:right;">Сумма</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td>
+              {{ item.name }}
+              <span class="qty"> × {{ item.price }} BYN</span>
+            </td>
+            <td class="col-qty">{{ item.quantity }}</td>
+            <td class="line-total">{{ item.lineTotal }} BYN</td>
+          </tr>
+          {% endfor %}
+          {% if delivery_fee %}
+          <tr>
+            <td colspan="2" style="color:#888; font-size:14px;">Сумма заказа:</td>
+            <td class="line-total" style="font-size:14px; font-weight:400;">{{ subtotal }} BYN</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="color:#888; font-size:14px;">Стоимость доставки:</td>
+            <td class="line-total" style="font-size:14px; font-weight:400;">{{ delivery_fee }} BYN</td>
+          </tr>
+          {% endif %}
+          <tr class="total-row">
+            <td colspan="2">Итого:</td>
+            <td class="line-total">{{ order.total_price }} BYN</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div><!-- /body -->
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Это автоматическое уведомление от <span>СУШИМÕ</span>.</p>
+    </div>
+
+  </div>
+</body>
+</html>

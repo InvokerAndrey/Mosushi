@@ -1,0 +1,28 @@
+СУШИМÕ — Новый заказ #{{ order.pk }}
+========================================
+
+ИНФОРМАЦИЯ О ЗАКАЗЕ
+  Дата / время : {{ created_at_local }}
+  Тип заказа   : {{ order_type_display }}
+  Время        : {{ scheduled_display }}
+
+КЛИЕНТ
+  Имя          : {{ order.customer_name }}
+  Телефон      : {{ order.phone }}
+{% if order.order_type == "delivery" %}
+  Адрес        : {{ order.address }}
+  Оплата       : {{ payment_display }}
+{% endif %}{% if order.comment %}
+  Комментарий  : {{ order.comment }}
+{% endif %}
+
+СОСТАВ ЗАКАЗА
+----------------------------------------
+{% for item in order.items %}  {{ item.name }}
+    {{ item.quantity }} × {{ item.price }} BYN = {{ item.lineTotal }} BYN
+{% endfor %}----------------------------------------
+{% if delivery_fee %}  Сумма заказа    : {{ subtotal }} BYN
+  Стоимость доставки: {{ delivery_fee }} BYN
+{% endif %}  ИТОГО: {{ order.total_price }} BYN
+========================================
+Это автоматическое уведомление от СУШИМÕ.

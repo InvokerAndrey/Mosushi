@@ -6,6 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    EMAIL_PORT=(int, 465),
+    EMAIL_USE_SSL=(bool, True),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -16,6 +18,15 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 # Accept both TELEGRAM_BOT_TOKEN and TELEGRAM_TOKEN (matches original Next.js fallback)
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="") or env("TELEGRAM_TOKEN", default="")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
+
+# Email — Mail.ru SMTP
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.mail.ru")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_SSL = env("EMAIL_USE_SSL")
+EMAIL_USE_TLS = False  # SSL and TLS are mutually exclusive; Mail.ru uses SSL on port 465
 
 INSTALLED_APPS = [
     "django.contrib.admin",
