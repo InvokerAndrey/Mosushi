@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const WORK_START_HOUR = 12;
+const DEFAULT_WORK_START_HOUR = 12;
 const MINUTES = [0, 15, 30, 45];
 
 const MONTH_NAMES = [
@@ -35,10 +35,8 @@ function isDayAvailable(day: Date, minOffsetMinutes: number, workEnd: WorkEnd): 
   const dayMid = new Date(day);
   dayMid.setHours(0, 0, 0, 0);
 
-  // Past days are unavailable
   if (dayMid < today) return false;
 
-  // For today: check if minTime is before or at the last work slot
   if (dayMid.getTime() === today.getTime()) {
     const minTime = getMinTime(minOffsetMinutes);
     const todayAtEnd = new Date(today);
@@ -46,17 +44,43 @@ function isDayAvailable(day: Date, minOffsetMinutes: number, workEnd: WorkEnd): 
     return minTime <= todayAtEnd;
   }
 
-  // Any future day is available
   return true;
 }
 
-function getValidMinutesForHour(hour: number, workEnd: WorkEnd): number[] {
-  if (hour > workEnd.hour) return [];
-  if (hour === workEnd.hour) return MINUTES.filter((m) => m <= workEnd.minute);
-  return MINUTES;
+/**
+ * Returns the allowed minutes for a given hour, respecting workStart, workStartMinute,
+ * and workEnd boundaries.
+ */
+function getValidMinutesForHour(
+  hour: number,
+  workEnd: WorkEnd,
+  workStart: number = DEFAULT_WORK_START_HOUR,
+  workStartMinute: number = 0
+): number[] {
+  if (hour < workStart || hour > workEnd.hour) return [];
+
+  let minutes = MINUTES;
+
+  // Apply start-minute floor on the opening hour
+  if (hour === workStart && workStartMinute > 0) {
+    minutes = minutes.filter((m) => m >= workStartMinute);
+  }
+
+  // Apply end-minute ceiling on the closing hour
+  if (hour === workEnd.hour) {
+    minutes = minutes.filter((m) => m <= workEnd.minute);
+  }
+
+  return minutes;
 }
 
-function getAvailableHours(day: Date, minOffsetMinutes: number, workEnd: WorkEnd): number[] {
+function getAvailableHours(
+  day: Date,
+  minOffsetMinutes: number,
+  workEnd: WorkEnd,
+  workStart: number,
+  workStartMinute: number = 0
+): number[] {
   const today = todayMidnight();
   const dayMid = new Date(day);
   dayMid.setHours(0, 0, 0, 0);
@@ -64,8 +88,10 @@ function getAvailableHours(day: Date, minOffsetMinutes: number, workEnd: WorkEnd
   const minTime = getMinTime(minOffsetMinutes);
   const hours: number[] = [];
 
-  for (let h = WORK_START_HOUR; h <= workEnd.hour; h++) {
-    const validMinutes = getValidMinutesForHour(h, workEnd);
+  for (let h = workStart; h <= workEnd.hour; h++) {
+    const validMinutes = getValidMinutesForHour(h, workEnd, workStart, workStartMinute);
+    if (validMinutes.length === 0) continue;
+
     if (isToday) {
       const hasSlot = validMinutes.some((m) => {
         const slot = new Date(day);
@@ -84,14 +110,16 @@ function getAvailableMinutes(
   day: Date,
   hour: number,
   minOffsetMinutes: number,
-  workEnd: WorkEnd
+  workEnd: WorkEnd,
+  workStart: number = DEFAULT_WORK_START_HOUR,
+  workStartMinute: number = 0
 ): number[] {
   const today = todayMidnight();
   const dayMid = new Date(day);
   dayMid.setHours(0, 0, 0, 0);
   const isToday = dayMid.getTime() === today.getTime();
   const minTime = getMinTime(minOffsetMinutes);
-  const validMinutes = getValidMinutesForHour(hour, workEnd);
+  const validMinutes = getValidMinutesForHour(hour, workEnd, workStart, workStartMinute);
 
   if (!isToday) return validMinutes;
 
@@ -120,7 +148,6 @@ function buildValue(day: Date, hour: number, minute: number): string {
   return `${formatDayLabel(day)}, ${hh}:${mm}`;
 }
 
-/** Returns a 2D array of dates for the calendar grid (Mon–Sun rows). */
 function getCalendarWeeks(year: number, month: number): (Date | null)[][] {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -151,7 +178,14 @@ function getCalendarWeeks(year: number, month: number): (Date | null)[][] {
 
 type Props = {
   minOffsetMinutes: number;
-  /** Last available work slot, e.g. { hour: 21, minute: 30 } or { hour: 22, minute: 0 } */
+  /** First selectable hour (e.g. 13 for delivery = opening+1, 12 for pickup). */
+  workStart?: number;
+  /**
+   * Minimum minute within the first selectable hour.
+   * e.g. 30 for pickup (earliest = opening:30), 0 for delivery.
+   */
+  workStartMinute?: number;
+  /** Last available work slot, e.g. { hour: 22, minute: 0 }. */
   workEnd?: WorkEnd;
   value: string;
   onChange: (value: string) => void;
@@ -162,6 +196,8 @@ const DEFAULT_WORK_END: WorkEnd = { hour: 22, minute: 0 };
 
 export default function TimePickerField({
   minOffsetMinutes,
+  workStart = DEFAULT_WORK_START_HOUR,
+  workStartMinute = 0,
   workEnd = DEFAULT_WORK_END,
   value,
   onChange,
@@ -184,20 +220,18 @@ export default function TimePickerField({
 
   const today = todayMidnight();
 
-  // Can't navigate to a month before the current one
   const canGoPrev =
     viewYear > today.getFullYear() ||
     (viewYear === today.getFullYear() && viewMonth > today.getMonth());
-  // No future limit — always allow navigating forward
   const canGoNext = true;
 
   const weeks = getCalendarWeeks(viewYear, viewMonth);
   const availableHours = selectedDay
-    ? getAvailableHours(selectedDay, minOffsetMinutes, workEnd)
+    ? getAvailableHours(selectedDay, minOffsetMinutes, workEnd, workStart, workStartMinute)
     : [];
   const availableMinutes =
     selectedDay && selectedHour !== null
-      ? getAvailableMinutes(selectedDay, selectedHour, minOffsetMinutes, workEnd)
+      ? getAvailableMinutes(selectedDay, selectedHour, minOffsetMinutes, workEnd, workStart, workStartMinute)
       : [];
 
   const handlePrevMonth = () => {
@@ -220,7 +254,7 @@ export default function TimePickerField({
 
   const handleHourChange = (hour: number) => {
     setSelectedHour(hour);
-    const newMinutes = getAvailableMinutes(selectedDay!, hour, minOffsetMinutes, workEnd);
+    const newMinutes = getAvailableMinutes(selectedDay!, hour, minOffsetMinutes, workEnd, workStart, workStartMinute);
     if (selectedMinute !== null && !newMinutes.includes(selectedMinute)) {
       setSelectedMinute(null);
       onChange("");

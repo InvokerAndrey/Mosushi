@@ -9,6 +9,14 @@ import {
   validateDeliveryForm,
   formatDeliveryAddress
 } from "@/lib/validations";
+import {
+  formatWorkingHours,
+  formatDeliveryCutoff,
+  isWithinAsapDeliveryHours,
+  getAsapDeliveryErrorMessage,
+  isWithinAsapPickupHours,
+  getAsapPickupErrorMessage,
+} from "@/lib/timeUtils";
 
 import Header from "@/components/Header";
 import MenuSection from "@/components/MenuSection";
@@ -201,6 +209,28 @@ export default function HomePage() {
       return;
     }
 
+    // ASAP pickup time validation (frontend guard before sending to backend)
+    if (activeTab === "pickup" && pickupForm.orderTime === "asap" && siteSettings) {
+      if (!isWithinAsapPickupHours(siteSettings.opening_hour, siteSettings.closing_hour)) {
+        setPickupErrors((prev) => ({
+          ...prev,
+          orderTime: getAsapPickupErrorMessage(siteSettings.opening_hour, siteSettings.closing_hour),
+        }));
+        return;
+      }
+    }
+
+    // ASAP delivery time validation (frontend guard before sending to backend)
+    if (activeTab === "delivery" && deliveryForm.orderTime === "asap" && siteSettings) {
+      if (!isWithinAsapDeliveryHours(siteSettings.opening_hour, siteSettings.closing_hour)) {
+        setDeliveryErrors((prev) => ({
+          ...prev,
+          orderTime: getAsapDeliveryErrorMessage(siteSettings.opening_hour, siteSettings.closing_hour),
+        }));
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     const requestBody = {
@@ -348,6 +378,7 @@ export default function HomePage() {
             requestError={requestError}
             isSubmitting={isSubmitting}
             onSubmitOrder={handleSubmitOrder}
+            settings={siteSettings}
           />
         </section>
 
@@ -379,18 +410,23 @@ export default function HomePage() {
 
           <div className="flex flex-col md:flex-row gap-8 lg:gap-16 text-sm">
             <div className="flex flex-col gap-2">
-              {siteSettings?.working_hours && (
-                <span className="text-background/60">
-                  Часы работы: {siteSettings.working_hours}
-                </span>
+              {siteSettings && (
+                <>
+                  <span className="text-background/60">
+                    Без выходных ({formatWorkingHours(siteSettings.opening_hour, siteSettings.closing_hour)})
+                  </span>
+                  <span className="text-background/60">
+                    Заказы на доставку принимаются до {formatDeliveryCutoff(siteSettings.closing_hour)}
+                  </span>
+                </>
               )}
               {siteSettings?.address && (
                 <span className="text-background/60">{siteSettings.address}</span>
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <a className="text-background/60 hover:text-accent transition-colors" href="#">
-                Политика конфиденциальности
+              <a className="text-background/60 hover:text-accent transition-colors" href="/privacy">
+                Политика обработки персональных данных
               </a>
               {siteSettings?.instagram && (
                 <a
@@ -402,11 +438,19 @@ export default function HomePage() {
                   Наш инстаграм
                 </a>
               )}
+                <a className="text-background/60 hover:text-accent transition-colors">
+                  sushimoby@mail.ru
+                </a>
             </div>
           </div>
 
-          <div className="text-background/40 text-xs">
-            © 2024 СУШИМÕ. PRECISION IN EVERY ROLL.
+          <div className="flex flex-col gap-2 text-sm">
+              <span className="text-background/60">
+                ИП Морочко Оксана Николаевна
+              </span>
+              <span className="text-background/60">
+                УНП 491209635
+              </span>
           </div>
         </div>
       </footer>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Category, SiteSettings } from "@/lib/types";
+import { formatWorkingHours } from "@/lib/timeUtils";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -88,9 +89,11 @@ export default function Header({
         {/* Right: working hours, phone, instagram, cart */}
         <div className="flex items-center gap-4 md:gap-5">
           <div className="hidden lg:flex items-center gap-5">
-            {settings?.working_hours && (
+            {settings && (
               <div className="flex flex-col text-right text-sm">
-                <span className="font-semibold text-text">{settings.working_hours}</span>
+                <span className="font-semibold text-text">
+                  {formatWorkingHours(settings.opening_hour, settings.closing_hour)}
+                </span>
               </div>
             )}
             {settings?.phone && (
@@ -156,9 +159,9 @@ export default function Header({
           ))}
 
           {/* Working hours */}
-          {settings?.working_hours && (
+          {settings && (
             <div className="px-8 py-4 border-b border-secondary/20 text-sm text-secondary font-semibold">
-              {settings.working_hours}
+              {formatWorkingHours(settings.opening_hour, settings.closing_hour)}
             </div>
           )}
 

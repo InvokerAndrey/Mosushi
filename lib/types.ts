@@ -31,7 +31,8 @@ export type MenuItem = {
 export type SiteSettings = {
   phone: string;
   instagram: string;
-  working_hours: string;
+  opening_hour: number;
+  closing_hour: number;
   address: string;
 };
 

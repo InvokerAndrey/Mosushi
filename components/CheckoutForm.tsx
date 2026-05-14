@@ -3,6 +3,8 @@
 import type { CheckoutTab, PickupFormState, DeliveryFormState } from "@/lib/validations";
 import { formatPhoneNumber } from "@/lib/validations";
 import TimePickerField from "@/components/TimePickerField";
+import type { SiteSettings } from "@/lib/types";
+import { getScheduledDeliveryStartHour } from "@/lib/timeUtils";
 
 type CheckoutFormProps = {
   activeTab: CheckoutTab;
@@ -18,6 +20,7 @@ type CheckoutFormProps = {
   requestError: string;
   isSubmitting: boolean;
   onSubmitOrder: () => void;
+  settings: SiteSettings | null;
 };
 
 function getInputClassName(hasError?: boolean) {
@@ -40,7 +43,10 @@ export default function CheckoutForm({
   requestError,
   isSubmitting,
   onSubmitOrder,
+  settings,
 }: CheckoutFormProps) {
+  const deliveryWorkStart = getScheduledDeliveryStartHour(settings?.opening_hour ?? 12);
+  const deliveryWorkEnd = { hour: settings?.closing_hour ?? 22, minute: 0 };
   const handlePhoneChange = (value: string, isPickup: boolean) => {
     const formatted = formatPhoneNumber(value);
     if (isPickup) {
@@ -101,7 +107,7 @@ export default function CheckoutForm({
               className={getInputClassName(
                 activeTab === "pickup" ? !!pickupErrors.name : !!deliveryErrors.name
               )}
-              placeholder="Иван Иванов"
+              placeholder="Иван"
               maxLength={50}
             />
             {(activeTab === "pickup" ? pickupErrors.name : deliveryErrors.name) && (
@@ -303,11 +309,15 @@ export default function CheckoutForm({
                   <span className="text-sm text-text">На определённое время</span>
                 </label>
               </div>
+              {deliveryErrors.orderTime && (
+                <p className="text-xs font-medium text-accent">{deliveryErrors.orderTime}</p>
+              )}
               {deliveryForm.orderTime === "specific" && (
                 <>
                   <TimePickerField
                     minOffsetMinutes={60}
-                    workEnd={{ hour: 21, minute: 30 }}
+                    workStart={deliveryWorkStart}
+                    workEnd={deliveryWorkEnd}
                     value={deliveryForm.scheduledTime}
                     onChange={(val) => {
                       setDeliveryForm((prev) => ({ ...prev, scheduledTime: val }));
@@ -356,9 +366,10 @@ export default function CheckoutForm({
                     name="pickup-time"
                     value="asap"
                     checked={pickupForm.orderTime === "asap"}
-                    onChange={() =>
-                      setPickupForm((prev) => ({ ...prev, orderTime: "asap", scheduledTime: "" }))
-                    }
+                    onChange={() => {
+                      setPickupForm((prev) => ({ ...prev, orderTime: "asap", scheduledTime: "" }));
+                      setPickupErrors((prev) => ({ ...prev, orderTime: undefined }));
+                    }}
                     className="w-4 h-4 accent-accent"
                   />
                   <span className="text-sm text-text">Забрать через 30 минут</span>
@@ -369,18 +380,25 @@ export default function CheckoutForm({
                     name="pickup-time"
                     value="specific"
                     checked={pickupForm.orderTime === "specific"}
-                    onChange={() =>
-                      setPickupForm((prev) => ({ ...prev, orderTime: "specific" }))
-                    }
+                    onChange={() => {
+                      setPickupForm((prev) => ({ ...prev, orderTime: "specific" }));
+                      setPickupErrors((prev) => ({ ...prev, orderTime: undefined }));
+                    }}
                     className="w-4 h-4 accent-accent"
                   />
                   <span className="text-sm text-text">На определённое время</span>
                 </label>
               </div>
+              {pickupErrors.orderTime && (
+                <p className="text-xs font-medium text-accent">{pickupErrors.orderTime}</p>
+              )}
               {pickupForm.orderTime === "specific" && (
                 <>
                   <TimePickerField
                     minOffsetMinutes={30}
+                    workStart={settings?.opening_hour ?? 12}
+                    workStartMinute={30}
+                    workEnd={{ hour: settings?.closing_hour ?? 22, minute: 0 }}
                     value={pickupForm.scheduledTime}
                     onChange={(val) => {
                       setPickupForm((prev) => ({ ...prev, scheduledTime: val }));

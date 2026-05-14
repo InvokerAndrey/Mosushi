@@ -50,7 +50,8 @@ class SiteSettings(models.Model):
     """
     phone = models.CharField("Телефон", max_length=50)
     instagram = models.URLField("Instagram", blank=True)
-    working_hours = models.CharField("Время работы", max_length=100)
+    opening_hour = models.IntegerField("Час открытия", default=12)
+    closing_hour = models.IntegerField("Час закрытия", default=22)
     address = models.CharField("Адрес", max_length=200, blank=True)
 
     class Meta:

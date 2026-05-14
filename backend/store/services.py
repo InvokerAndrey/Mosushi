@@ -6,10 +6,13 @@ Views are thin — all processing, validation, and side effects happen here.
 import logging
 from decimal import Decimal, InvalidOperation
 
+from django.utils import timezone
+
 from .constants import DELIVERY_FEE, FREE_DELIVERY_THRESHOLD
 from .email_service import send_order_email
-from .models import Order, Product
+from .models import Order, Product, SiteSettings
 from .telegram import send_order_to_telegram
+from .utils import get_asap_delivery_error, get_asap_pickup_error, is_asap_order_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +105,16 @@ def create_order(body: dict) -> Order:
         if not pickup.get("phoneNumber", "").strip():
             raise OrderValidationError("Pickup: phone is required.")
 
+        # ASAP pickup: reject if outside working hours
+        if pickup.get("orderTime", "asap") == "asap":
+            settings = SiteSettings.objects.first()
+            if settings:
+                local_now = timezone.localtime(timezone.now())
+                if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
+                    raise OrderValidationError(
+                        get_asap_pickup_error(settings.opening_hour, settings.closing_hour)
+                    )
+
         order = Order(
             order_type="pickup",
             customer_name=pickup["name"].strip(),
@@ -122,6 +135,16 @@ def create_order(body: dict) -> Order:
             raise OrderValidationError("Delivery: address is required.")
         if delivery.get("paymentMethod") not in ("CASH", "CARD"):
             raise OrderValidationError("Invalid payment method.")
+
+        # ASAP delivery: reject if outside working hours
+        if delivery.get("orderTime", "asap") == "asap":
+            settings = SiteSettings.objects.first()
+            if settings:
+                local_now = timezone.localtime(timezone.now())
+                if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
+                    raise OrderValidationError(
+                        get_asap_delivery_error(settings.opening_hour, settings.closing_hour)
+                    )
 
         order = Order(
             order_type="delivery",
