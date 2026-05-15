@@ -6,17 +6,21 @@ from .models import Category, InfoBlock, Order, Product, SiteSettings
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "available")
-    list_editable = ("available",)
+    list_display = ("order", "name", "available")
+    list_display_links = ("name",)
+    list_editable = ("order", "available")
     search_fields = ("name",)
+    ordering = ("order", "id")
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "price", "weight", "available", "is_new", "image_preview")
+    list_display = ("order", "name", "category", "price", "weight", "available", "is_new", "image_preview")
+    list_display_links = ("name",)
     list_filter = ("category", "available", "is_new")
     search_fields = ("name",)
-    list_editable = ("available", "is_new")
+    list_editable = ("order", "available", "is_new")
+    ordering = ("category", "-is_new", "order", "name")
 
     @admin.display(description="Фото")
     def image_preview(self, obj):

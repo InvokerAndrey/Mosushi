@@ -176,28 +176,6 @@ export function validateDeliveryForm(form: DeliveryFormState): DeliveryFormError
   return errors;
 }
 
-// Helper functions
-export function isPickupFormFilled(form: PickupFormState): boolean {
-  return form.name.trim().length > 0 && form.phoneNumber.trim().length > PHONE_PREFIX.length;
-}
-
-export function isDeliveryAddressFilled(address: DeliveryAddress): boolean {
-  return (
-    address.street.trim().length > 0 &&
-    address.houseNumber.trim().length > 0 &&
-    address.apartment.trim().length > 0
-  );
-}
-
-export function isDeliveryFormFilled(form: DeliveryFormState): boolean {
-  return (
-    form.name.trim().length > 0 &&
-    form.phoneNumber.trim().length > PHONE_PREFIX.length &&
-    isDeliveryAddressFilled(form.address) &&
-    form.paymentMethod !== ""
-  );
-}
-
 export function formatPhoneNumber(value: string): string {
   let newValue = value;
   if (!newValue.startsWith(PHONE_PREFIX)) {
@@ -211,26 +189,6 @@ export function formatPhoneNumber(value: string): string {
 
 export function formatDeliveryAddress(address: DeliveryAddress): string {
   return `${address.street}, ${address.houseNumber}${address.apartment ? `, квартира ${address.apartment}` : ""}${address.entrance ? `, подъезд ${address.entrance}` : ""}${address.floor ? `, этаж ${address.floor}` : ""}${address.intercom ? `, домофон ${address.intercom}` : ""}`;
-}
-
-export function buildDeliveryComment(changeInfo: string, userComment: string): string {
-  if (changeInfo && userComment.trim()) {
-    return `${changeInfo}\n${userComment}`;
-  }
-  if (changeInfo) {
-    return changeInfo;
-  }
-  return userComment;
-}
-
-export function buildChangeInfo(paymentMethod: string, noChange: boolean, changeAmount: string): string {
-  if (paymentMethod !== "CASH") {
-    return "";
-  }
-  if (noChange) {
-    return "Change: No";
-  }
-  return `Change: from ${changeAmount} BYN`;
 }
 
 // Checkout form storage functions

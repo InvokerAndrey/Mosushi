@@ -36,6 +36,7 @@ export type SiteSettings = {
   address: string;
   delivery_fee: number;
   free_delivery_threshold: number;
+  contact_email: string;
 };
 
 export type InfoBlock = {

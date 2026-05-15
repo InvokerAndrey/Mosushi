@@ -45,6 +45,7 @@ def site_settings(request):
             "address": "",
             "delivery_fee": 6.0,
             "free_delivery_threshold": 40.0,
+            "contact_email": "sushimoby@mail.ru",
         })
     return JsonResponse({
         "phone": obj.phone,
@@ -54,6 +55,7 @@ def site_settings(request):
         "address": obj.address,
         "delivery_fee": float(obj.delivery_fee),
         "free_delivery_threshold": float(obj.free_delivery_threshold),
+        "contact_email": obj.contact_email,
     })
 
 

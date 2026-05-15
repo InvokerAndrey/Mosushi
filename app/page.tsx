@@ -438,9 +438,14 @@ export default function HomePage() {
                   Наш инстаграм
                 </a>
               )}
-                <a className="text-background/60 hover:text-accent transition-colors">
-                  sushimoby@mail.ru
+              {siteSettings?.contact_email && (
+                <a
+                  href={`mailto:${siteSettings.contact_email}`}
+                  className="text-background/60 hover:text-accent transition-colors"
+                >
+                  {siteSettings.contact_email}
                 </a>
+              )}
             </div>
           </div>
 

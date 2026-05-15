@@ -26,7 +26,7 @@ export default function CartItemCard({ item, onIncrease, onDecrease }: CartItemC
             type="button"
             onClick={onDecrease}
             className="w-7 h-7 flex items-center justify-center hover:bg-primary/10 text-primary font-bold text-xs transition-colors cursor-pointer"
-            aria-label={"Decrease " + item.name + " quantity"}
+            aria-label={`Уменьшить количество: ${item.name}`}
           >
             −
           </button>
@@ -37,7 +37,7 @@ export default function CartItemCard({ item, onIncrease, onDecrease }: CartItemC
             type="button"
             onClick={onIncrease}
             className="w-7 h-7 flex items-center justify-center hover:bg-primary/10 text-primary font-bold text-xs transition-colors cursor-pointer"
-            aria-label={"Increase " + item.name + " quantity"}
+            aria-label={`Увеличить количество: ${item.name}`}
           >
             +
           </button>

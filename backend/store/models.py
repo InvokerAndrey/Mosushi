@@ -5,11 +5,12 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField("Название", max_length=100)
     available = models.BooleanField("В наличии", default=True)
+    order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
-        ordering = ["id"]
+        ordering = ["order", "id"]
 
     def __str__(self):
         return self.name
@@ -31,11 +32,12 @@ class Product(models.Model):
     image = models.ImageField("Изображение", upload_to="products/")
     available = models.BooleanField("В наличии", default=True)
     is_new = models.BooleanField("Новинка", default=False)
+    order = models.PositiveIntegerField("Порядок", default=0)
     created_at = models.DateTimeField("Дата добавления", auto_now_add=True)
 
     class Meta:
-        # Products marked as "Новинка" appear first, then sorted alphabetically
-        ordering = ["-is_new", "name"]
+        # "Новинка" products always come first; within each group, sorted by "Порядок", then name as fallback
+        ordering = ["-is_new", "order", "name"]
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"
 
@@ -55,6 +57,7 @@ class SiteSettings(models.Model):
     address = models.CharField("Адрес", max_length=200, blank=True)
     delivery_fee = models.DecimalField("Стоимость доставки (BYN)", max_digits=6, decimal_places=2, default=6)
     free_delivery_threshold = models.DecimalField("Бесплатная доставка от (BYN)", max_digits=6, decimal_places=2, default=40)
+    contact_email = models.EmailField("Email для уведомлений о заказах", blank=True, default="sushimoby@mail.ru")
 
     class Meta:
         verbose_name = "Настройки сайта"

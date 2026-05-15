@@ -1,16 +1,11 @@
 import { CART_STORAGE_KEY } from "./constants";
 import type { CartState } from "./types";
 
-// Cart storage functions
 export const readCartFromStorage = (): CartState => {
-  const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-  if (!savedCart) {
-    return {};
-  }
-
+  const saved = localStorage.getItem(CART_STORAGE_KEY);
+  if (!saved) return {};
   try {
-    const parsedCart = JSON.parse(savedCart) as CartState;
-    return parsedCart;
+    return JSON.parse(saved) as CartState;
   } catch {
     localStorage.removeItem(CART_STORAGE_KEY);
     return {};

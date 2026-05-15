@@ -4,15 +4,25 @@ Completely isolated from Telegram logic — never blocks or cancels an order on 
 """
 
 import logging
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from .models import Order
+from .models import Order, SiteSettings
 
 logger = logging.getLogger(__name__)
 
-ORDER_EMAIL_RECIPIENT = "sushimoby@mail.ru"
+FALLBACK_EMAIL_RECIPIENT = "sushimoby@mail.ru"
+
+
+def _get_order_email_recipient() -> str:
+    """Return the contact email from SiteSettings, falling back to the hardcoded default."""
+    obj = SiteSettings.objects.first()
+    if obj and obj.contact_email:
+        return obj.contact_email
+    return FALLBACK_EMAIL_RECIPIENT
 
 
 def send_order_email(order: Order) -> bool:
@@ -22,6 +32,8 @@ def send_order_email(order: Order) -> bool:
     Returns True on success, False on any failure.
     Never raises — errors are logged and swallowed so the order is never blocked.
     """
+    recipient = _get_order_email_recipient()
+
     try:
         subject = f"[ORDER] Заказ #{order.pk}"
         context = _build_context(order)
@@ -33,12 +45,12 @@ def send_order_email(order: Order) -> bool:
             subject=subject,
             body=text_body,
             from_email=settings.EMAIL_HOST_USER,
-            to=[ORDER_EMAIL_RECIPIENT],
+            to=[recipient],
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=False)
 
-        logger.info("Order #%d: email notification sent to %s.", order.pk, ORDER_EMAIL_RECIPIENT)
+        logger.info("Order #%d: email notification sent to %s.", order.pk, recipient)
         return True
 
     except Exception:
@@ -48,8 +60,6 @@ def send_order_email(order: Order) -> bool:
 
 def _build_context(order: Order) -> dict:
     """Build the template context for the order email."""
-    from decimal import Decimal
-
     order_type_display = "Доставка" if order.order_type == "delivery" else "Самовывоз"
 
     payment_display = ""

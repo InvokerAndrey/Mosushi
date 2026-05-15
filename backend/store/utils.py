@@ -57,6 +57,3 @@ def get_asap_pickup_error(opening_hour: int, closing_hour: int) -> str:
     cutoff = format_asap_cutoff(closing_hour)
     return f"Заказы на самовывоз принимаются с {opening_hour}:00 до {cutoff}"
 
-
-# Backward-compatible alias
-is_within_asap_delivery_hours = is_asap_order_allowed
