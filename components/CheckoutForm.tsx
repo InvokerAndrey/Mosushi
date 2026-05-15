@@ -64,7 +64,7 @@ export default function CheckoutForm({
 
       {/* Tabs */}
       <div className="flex mb-6 border-b border-secondary/20">
-        {(["delivery", "pickup"] as CheckoutTab[]).map((tab) => (
+        {(["pickup", "delivery"] as CheckoutTab[]).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -76,7 +76,7 @@ export default function CheckoutForm({
                 : "text-secondary hover:text-text")
             }
           >
-            {tab === "delivery" ? "Доставка" : "Самовывоз"}
+            {tab === "pickup" ? "Самовывоз" : "Доставка"}
           </button>
         ))}
       </div>

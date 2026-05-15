@@ -53,6 +53,8 @@ class SiteSettings(models.Model):
     opening_hour = models.IntegerField("Час открытия", default=12)
     closing_hour = models.IntegerField("Час закрытия", default=22)
     address = models.CharField("Адрес", max_length=200, blank=True)
+    delivery_fee = models.DecimalField("Стоимость доставки (BYN)", max_digits=6, decimal_places=2, default=6)
+    free_delivery_threshold = models.DecimalField("Бесплатная доставка от (BYN)", max_digits=6, decimal_places=2, default=40)
 
     class Meta:
         verbose_name = "Настройки сайта"

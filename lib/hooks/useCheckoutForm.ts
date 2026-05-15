@@ -13,7 +13,7 @@ import {
 } from "@/lib/validations";
 
 export function useCheckoutForm() {
-  const [activeTab, setActiveTab] = useState<CheckoutTab>("delivery");
+  const [activeTab, setActiveTab] = useState<CheckoutTab>("pickup");
   const [pickupForm, setPickupForm] = useState<PickupFormState>(createEmptyPickupForm());
   const [deliveryForm, setDeliveryForm] = useState<DeliveryFormState>(createEmptyDeliveryForm());
   const [isFormReady, setIsFormReady] = useState(false);

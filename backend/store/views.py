@@ -37,13 +37,23 @@ def products_list(request):
 def site_settings(request):
     obj = SiteSettings.objects.first()
     if not obj:
-        return JsonResponse({"phone": "", "instagram": "", "opening_hour": 12, "closing_hour": 22, "address": ""})
+        return JsonResponse({
+            "phone": "",
+            "instagram": "",
+            "opening_hour": 12,
+            "closing_hour": 22,
+            "address": "",
+            "delivery_fee": 6.0,
+            "free_delivery_threshold": 40.0,
+        })
     return JsonResponse({
         "phone": obj.phone,
         "instagram": obj.instagram,
         "opening_hour": obj.opening_hour,
         "closing_hour": obj.closing_hour,
         "address": obj.address,
+        "delivery_fee": float(obj.delivery_fee),
+        "free_delivery_threshold": float(obj.free_delivery_threshold),
     })
 
 

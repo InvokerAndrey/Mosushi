@@ -7,8 +7,6 @@ import logging
 import requests
 from django.conf import settings
 
-from .constants import DELIVERY_FEE, FREE_DELIVERY_THRESHOLD
-
 logger = logging.getLogger(__name__)
 
 
@@ -89,8 +87,8 @@ def build_order_message(order) -> str:
     lines.append("")
     if order.order_type == "delivery":
         subtotal = sum(float(i["lineTotal"]) for i in order.items)
-        fee = 0.0 if subtotal >= float(FREE_DELIVERY_THRESHOLD) else float(DELIVERY_FEE)
-        fee_label = "Бесплатно" if not fee else f"{fee:.2f} BYN"
+        fee = round(float(order.total_price) - subtotal, 2)
+        fee_label = "Бесплатно" if fee == 0 else f"{fee:.2f} BYN"
         lines.append(f"🚚 <b>Доставка:</b> {fee_label}")
 
     lines.append(f"💵 <b>Итого:</b> {float(order.total_price):.2f} BYN")

@@ -34,6 +34,8 @@ export type SiteSettings = {
   opening_hour: number;
   closing_hour: number;
   address: string;
+  delivery_fee: number;
+  free_delivery_threshold: number;
 };
 
 export type InfoBlock = {

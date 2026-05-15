@@ -8,13 +8,15 @@ from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
 
-from .constants import DELIVERY_FEE, FREE_DELIVERY_THRESHOLD
 from .email_service import send_order_email
 from .models import Order, Product, SiteSettings
 from .telegram import send_order_to_telegram
 from .utils import get_asap_delivery_error, get_asap_pickup_error, is_asap_order_allowed
 
 logger = logging.getLogger(__name__)
+
+DELIVERY_FEE_FALLBACK = Decimal("6.00")
+FREE_DELIVERY_THRESHOLD_FALLBACK = Decimal("40.00")
 
 
 class OrderValidationError(Exception):
@@ -54,6 +56,11 @@ def create_order(body: dict) -> Order:
     if not isinstance(client_total, (int, float)):
         raise OrderValidationError("totalPrice must be a number.")
 
+    # --- Fetch SiteSettings once for this request ---
+    settings = SiteSettings.objects.first()
+    delivery_fee_value = settings.delivery_fee if settings else DELIVERY_FEE_FALLBACK
+    free_delivery_threshold = settings.free_delivery_threshold if settings else FREE_DELIVERY_THRESHOLD_FALLBACK
+
     # --- Build line items — prices always come from the DB, never the client ---
     entries = [
         (int(pid), qty)
@@ -86,8 +93,8 @@ def create_order(body: dict) -> Order:
     subtotal = sum(Decimal(str(item["lineTotal"])) for item in line_items)
     delivery_fee = (
         Decimal("0.00")
-        if order_type == "pickup" or subtotal >= FREE_DELIVERY_THRESHOLD
-        else DELIVERY_FEE
+        if order_type == "pickup" or subtotal >= free_delivery_threshold
+        else delivery_fee_value
     )
     grand_total = subtotal + delivery_fee
 
@@ -106,14 +113,12 @@ def create_order(body: dict) -> Order:
             raise OrderValidationError("Pickup: phone is required.")
 
         # ASAP pickup: reject if outside working hours
-        if pickup.get("orderTime", "asap") == "asap":
-            settings = SiteSettings.objects.first()
-            if settings:
-                local_now = timezone.localtime(timezone.now())
-                if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
-                    raise OrderValidationError(
-                        get_asap_pickup_error(settings.opening_hour, settings.closing_hour)
-                    )
+        if pickup.get("orderTime", "asap") == "asap" and settings:
+            local_now = timezone.localtime(timezone.now())
+            if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
+                raise OrderValidationError(
+                    get_asap_pickup_error(settings.opening_hour, settings.closing_hour)
+                )
 
         order = Order(
             order_type="pickup",
@@ -137,14 +142,12 @@ def create_order(body: dict) -> Order:
             raise OrderValidationError("Invalid payment method.")
 
         # ASAP delivery: reject if outside working hours
-        if delivery.get("orderTime", "asap") == "asap":
-            settings = SiteSettings.objects.first()
-            if settings:
-                local_now = timezone.localtime(timezone.now())
-                if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
-                    raise OrderValidationError(
-                        get_asap_delivery_error(settings.opening_hour, settings.closing_hour)
-                    )
+        if delivery.get("orderTime", "asap") == "asap" and settings:
+            local_now = timezone.localtime(timezone.now())
+            if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
+                raise OrderValidationError(
+                    get_asap_delivery_error(settings.opening_hour, settings.closing_hour)
+                )
 
         order = Order(
             order_type="delivery",

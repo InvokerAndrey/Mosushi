@@ -1,4 +1,2 @@
-from decimal import Decimal
-
-DELIVERY_FEE = Decimal("6.00")
-FREE_DELIVERY_THRESHOLD = Decimal("40.00")
+# Delivery pricing constants have been moved to SiteSettings model.
+# Edit them via Django Admin under "Настройки сайта".

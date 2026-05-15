@@ -8,6 +8,7 @@ type CartSummaryProps = {
   lineItems: CartLineItem[];
   subtotalPrice: number;
   deliveryFee: number;
+  freeDeliveryThreshold: number;
   activeTab: CheckoutTab;
   onIncreaseItem: (itemId: string) => void;
   onDecreaseItem: (itemId: string) => void;
@@ -18,6 +19,7 @@ export default function CartSummary({
   lineItems,
   subtotalPrice,
   deliveryFee,
+  freeDeliveryThreshold,
   activeTab,
   onIncreaseItem,
   onDecreaseItem,
@@ -80,8 +82,10 @@ export default function CartSummary({
                     <span>{deliveryFee.toFixed(2)} BYN</span>
                   )}
                 </div>
-                {deliveryFee > 0 && subtotalPrice < 40 && (
-                  <p className="text-xs text-secondary/70">Бесплатная доставка от 40 BYN</p>
+                {deliveryFee > 0 && subtotalPrice < freeDeliveryThreshold && (
+                  <p className="text-xs text-secondary/70">
+                    Бесплатная доставка от {freeDeliveryThreshold} BYN
+                  </p>
                 )}
               </>
             )}

@@ -24,9 +24,6 @@ import CheckoutForm from "@/components/CheckoutForm";
 import CartSummary from "@/components/CartSummary";
 import InfoBlocks from "@/components/InfoBlocks";
 
-const DELIVERY_FEE = 6;
-const FREE_DELIVERY_THRESHOLD = 40;
-
 export default function HomePage() {
   // --- Data from API ---
   const [categories, setCategories] = useState<Category[]>([]);
@@ -156,8 +153,10 @@ export default function HomePage() {
 
   const deliveryFee = useMemo(() => {
     if (activeTab !== "delivery") return 0;
-    return subtotalPrice >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  }, [activeTab, subtotalPrice]);
+    const fee = siteSettings?.delivery_fee ?? 6;
+    const threshold = siteSettings?.free_delivery_threshold ?? 40;
+    return subtotalPrice >= threshold ? 0 : fee;
+  }, [activeTab, subtotalPrice, siteSettings]);
 
   const grandTotal = useMemo(() => subtotalPrice + deliveryFee, [subtotalPrice, deliveryFee]);
 
@@ -357,6 +356,7 @@ export default function HomePage() {
               lineItems={lineItems}
               subtotalPrice={subtotalPrice}
               deliveryFee={deliveryFee}
+              freeDeliveryThreshold={siteSettings?.free_delivery_threshold ?? 40}
               activeTab={activeTab}
               onIncreaseItem={handleAddToCart}
               onDecreaseItem={handleRemoveFromCart}
