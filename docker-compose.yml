@@ -1,0 +1,53 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      - backend_db:/app/db.sqlite3
+      - backend_media:/app/media
+    expose:
+      - "8000"
+    networks:
+      - app
+
+  frontend:
+    build:
+      context: .
+      args:
+        DJANGO_API_URL: http://backend:8000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+    networks:
+      - app
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app
+
+volumes:
+  backend_db:
+  backend_media:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app:
+    driver: bridge
