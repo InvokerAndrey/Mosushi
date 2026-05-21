@@ -89,5 +89,4 @@ jobs:
         with:
           url: ${{ secrets.PORTAINER_URL }}
           token: ${{ secrets.PORTAINER_TOKEN }}
-          endpoint: "1"
           name: "sushimo"
