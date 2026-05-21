@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const SECTIONS = [
@@ -135,12 +136,12 @@ export default function PrivacyPage() {
       {/* Minimal header */}
       <header className="bg-primary sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1200px] mx-auto flex items-center gap-4 px-4 md:px-8 py-4">
-          <a
+          <Link
             href="/"
             className="font-black tracking-tighter text-3xl text-background hover:opacity-80 transition-opacity"
           >
             СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
-          </a>
+          </Link>
         </div>
       </header>
 

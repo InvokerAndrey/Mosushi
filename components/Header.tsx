@@ -2,6 +2,7 @@
 
 import type { Category, SiteSettings } from "@/lib/types";
 import { formatWorkingHours } from "@/lib/timeUtils";
+import Link from "next/link";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -55,7 +56,7 @@ export default function Header({
               {mobileMenuOpen ? "close" : "menu"}
             </span>
           </button>
-          <a
+          <Link
             href="#"
             onClick={(e) => {
               e.preventDefault();
@@ -64,7 +65,7 @@ export default function Header({
             className="font-black tracking-tighter text-3xl text-primary hover:text-accent transition-colors cursor-pointer"
           >
             СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
-          </a>
+          </Link>
         </div>
 
         {/* Center: desktop category nav — loaded dynamically from DB */}
@@ -99,13 +100,13 @@ export default function Header({
             {settings?.phone && (
               <div className="flex items-center gap-2 text-sm font-semibold text-text">
                 <span className="material-symbols-outlined text-secondary">phone</span>
-                <a href={`tel:${settings.phone}`} className="hover:text-accent transition-colors">
+                <Link href={`tel:${settings.phone}`} className="hover:text-accent transition-colors">
                   {settings.phone}
-                </a>
+                </Link>
               </div>
             )}
             {settings?.instagram && (
-              <a
+              <Link
                 href={settings.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -113,7 +114,7 @@ export default function Header({
                 aria-label="Наш инстаграм"
               >
                 <InstagramIcon />
-              </a>
+              </Link>
             )}
           </div>
 
@@ -142,7 +143,7 @@ export default function Header({
         <nav className="flex flex-col bg-background">
           {/* Categories */}
           {categories.map((cat) => (
-            <a
+            <Link
               key={cat.id}
               className={
                 "px-8 py-4 uppercase text-sm font-bold tracking-widest transition-colors duration-200 border-b border-secondary/20 hover:bg-primary/5 " +
@@ -155,7 +156,7 @@ export default function Header({
               }}
             >
               {cat.name.toUpperCase()}
-            </a>
+            </Link>
           ))}
 
           {/* Working hours */}
@@ -167,7 +168,7 @@ export default function Header({
 
           {/* Instagram */}
           {settings?.instagram && (
-            <a
+            <Link
               href={settings.instagram}
               target="_blank"
               rel="noopener noreferrer"
@@ -176,7 +177,7 @@ export default function Header({
             >
               <InstagramIcon className="w-4 h-4" />
               Наш инстаграм
-            </a>
+            </Link>
           )}
 
           {/* Cart button */}

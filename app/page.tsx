@@ -23,6 +23,7 @@ import MenuSection from "@/components/MenuSection";
 import CheckoutForm from "@/components/CheckoutForm";
 import CartSummary from "@/components/CartSummary";
 import InfoBlocks from "@/components/InfoBlocks";
+import Link from "next/link";
 
 export default function HomePage() {
   // --- Data from API ---
@@ -425,26 +426,26 @@ export default function HomePage() {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <a className="text-background/60 hover:text-accent transition-colors" href="/privacy">
+              <Link className="text-background/60 hover:text-accent transition-colors" href="/privacy">
                 Политика обработки персональных данных
-              </a>
+              </Link>
               {siteSettings?.instagram && (
-                <a
+                <Link
                   href={siteSettings.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-background/60 hover:text-accent transition-colors"
                 >
                   Наш инстаграм
-                </a>
+                </Link>
               )}
               {siteSettings?.contact_email && (
-                <a
+                <Link
                   href={`mailto:${siteSettings.contact_email}`}
                   className="text-background/60 hover:text-accent transition-colors"
                 >
                   {siteSettings.contact_email}
-                </a>
+                </Link>
               )}
             </div>
           </div>
