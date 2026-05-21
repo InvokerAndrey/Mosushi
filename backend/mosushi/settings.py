@@ -15,8 +15,7 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
-# Accept both TELEGRAM_BOT_TOKEN and TELEGRAM_TOKEN (matches original Next.js fallback)
-TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="") or env("TELEGRAM_TOKEN", default="")
+TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
 
 # Email — Mail.ru SMTP
@@ -72,7 +71,7 @@ WSGI_APPLICATION = "mosushi.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": BASE_DIR / "db" / "db.sqlite3",
     }
 }
 

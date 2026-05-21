@@ -1,24 +1,22 @@
-FROM node:22-alpine AS deps
+FROM node:22-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG DJANGO_API_URL=http://backend:8000
-ENV DJANGO_API_URL=$DJANGO_API_URL
 RUN npm run build
 
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["tini", "--"]
+CMD ["npm", "run", "start"]
