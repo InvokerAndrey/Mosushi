@@ -78,15 +78,19 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs:
       - frontend
       - backend
-    if: github.ref == 'refs/heads/main'
-
     steps:
-      - name: Redeploy Portainer stack
-        uses: cssnr/portainer-stack-deploy-action@v1
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          url: ${{ secrets.PORTAINER_URL }}
-          token: ${{ secrets.PORTAINER_TOKEN }}
-          name: "sushimo"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/sushimo
+            docker compose pull
+            docker compose up -d --remove-orphans
