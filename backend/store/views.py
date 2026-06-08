@@ -10,13 +10,28 @@ from .services import OrderValidationError, create_order
 
 @require_GET
 def categories_list(request):
-    categories = list(Category.objects.filter(available=True).values("id", "name"))
-    return JsonResponse(categories, safe=False)
+    categories = Category.objects.filter(available=True).prefetch_related("subcategories")
+    data = [
+        {
+            "id": cat.id,
+            "name": cat.name,
+            "subcategories": [
+                {
+                    "id": sub.id,
+                    "name": sub.name,
+                    "sort_order": sub.sort_order,
+                }
+                for sub in cat.subcategories.order_by("sort_order", "id")
+            ],
+        }
+        for cat in categories
+    ]
+    return JsonResponse(data, safe=False)
 
 
 @require_GET
 def products_list(request):
-    qs = Product.objects.filter(available=True).select_related("category")
+    qs = Product.objects.filter(available=True).select_related("category", "subcategory")
     data = [
         {
             "id": p.id,
@@ -26,6 +41,7 @@ def products_list(request):
             "weight": p.weight,
             "image": p.image.url if p.image else "",
             "category_id": p.category_id,
+            "subcategory_id": p.subcategory_id,
             "is_new": p.is_new,
         }
         for p in qs

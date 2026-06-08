@@ -12,9 +12,16 @@ export type CartLineItem = {
 
 // API types — match Django backend response shapes
 
+export type Subcategory = {
+  id: number;
+  name: string;
+  sort_order: number;
+};
+
 export type Category = {
   id: number;
   name: string;
+  subcategories: Subcategory[];
 };
 
 export type MenuItem = {
@@ -25,6 +32,7 @@ export type MenuItem = {
   weight: string;
   image: string;
   category_id: number;
+  subcategory_id: number | null;
   is_new: boolean;
 };
 

@@ -336,6 +336,7 @@ export default function HomePage() {
                   id={String(cat.id)}
                   title={cat.name}
                   items={menuItems.filter((item) => item.category_id === cat.id)}
+                  subcategories={cat.subcategories}
                   cartItems={cartItems}
                   onAddToCart={handleAddToCart}
                   onRemoveFromCart={handleRemoveFromCart}

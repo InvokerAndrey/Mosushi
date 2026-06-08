@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Category, InfoBlock, Order, Product, SiteSettings
+from .models import Category, InfoBlock, Order, Product, SiteSettings, Subcategory
 
 
 @admin.register(Category)
@@ -13,14 +13,39 @@ class CategoryAdmin(admin.ModelAdmin):
     ordering = ("order", "id")
 
 
+@admin.register(Subcategory)
+class SubcategoryAdmin(admin.ModelAdmin):
+    list_display = ("sort_order", "name", "category")
+    list_display_links = ("name",)
+    list_editable = ("sort_order",)
+    list_filter = ("category",)
+    search_fields = ("name",)
+    ordering = ("category", "sort_order", "id")
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("order", "name", "category", "price", "weight", "available", "is_new", "image_preview")
+    list_display = ("order", "name", "category", "subcategory", "price", "weight", "available", "is_new", "image_preview")
     list_display_links = ("name",)
-    list_filter = ("category", "available", "is_new")
+    list_filter = ("category", "subcategory", "available", "is_new")
     search_fields = ("name",)
     list_editable = ("order", "available", "is_new")
-    ordering = ("category", "-is_new", "order", "name")
+    ordering = ("category", "subcategory", "-is_new", "order", "name")
+    autocomplete_fields = ("subcategory",)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter subcategory choices to match the selected category."""
+        if db_field.name == "subcategory":
+            # Get the object being edited (if any) to pre-filter subcategories
+            object_id = request.resolver_match.kwargs.get("object_id")
+            if object_id:
+                try:
+                    product = Product.objects.get(pk=object_id)
+                    if product.category_id:
+                        kwargs["queryset"] = Subcategory.objects.filter(category_id=product.category_id)
+                except Product.DoesNotExist:
+                    pass
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="Фото")
     def image_preview(self, obj):

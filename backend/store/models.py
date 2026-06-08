@@ -16,6 +16,27 @@ class Category(models.Model):
         return self.name
 
 
+class Subcategory(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        verbose_name="Категория",
+        related_name="subcategories",
+    )
+    name = models.CharField("Название", max_length=100)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    updated_at = models.DateTimeField("Дата обновления", auto_now=True)
+
+    class Meta:
+        verbose_name = "Подкатегория"
+        verbose_name_plural = "Подкатегории"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.category.name} → {self.name}"
+
+
 class Product(models.Model):
     category = models.ForeignKey(
         Category,
@@ -23,6 +44,14 @@ class Product(models.Model):
         null=True,
         blank=True,
         verbose_name="Категория",
+        related_name="products",
+    )
+    subcategory = models.ForeignKey(
+        Subcategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Подкатегория",
         related_name="products",
     )
     name = models.CharField("Название", max_length=200)
