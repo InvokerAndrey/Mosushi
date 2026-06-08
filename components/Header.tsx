@@ -159,6 +159,18 @@ export default function Header({
             </Link>
           ))}
 
+          {/* Phone */}
+          {settings?.phone && (
+            <a
+              href={`tel:${settings.phone}`}
+              className="px-8 py-4 flex items-center gap-3 text-sm font-bold tracking-widest text-primary hover:text-accent hover:bg-primary/5 transition-colors border-b border-secondary/20"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="material-symbols-outlined text-secondary text-base">phone</span>
+              {settings.phone}
+            </a>
+          )}
+
           {/* Working hours */}
           {settings && (
             <div className="px-8 py-4 border-b border-secondary/20 text-sm text-secondary font-semibold">
