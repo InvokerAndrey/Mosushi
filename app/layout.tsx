@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "СУШИМÕ — Доставка суши",
-  description: "Свежие суши каждый день. Ручная работа, премиальные ингредиенты."
+  description: "Свежие суши, роллы и сеты каждый день с доставкой по Мозырю. Ручная работа, премиальные ингредиенты."
 };
 
 type RootLayoutProps = {
