@@ -458,6 +458,16 @@ export default function HomePage() {
               <span className="text-background/60">
                 УНП 491209635
               </span>
+              <span className="text-background/60">
+                {siteSettings?.phone && (
+                <Link
+                  href={`mailto:${siteSettings.phone}`}
+                  className="text-background/60 hover:text-accent transition-colors"
+                >
+                  {siteSettings.phone}
+                </Link>
+              )}
+              </span>
           </div>
         </div>
       </footer>
