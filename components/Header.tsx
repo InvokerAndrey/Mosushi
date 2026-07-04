@@ -64,7 +64,7 @@ export default function Header({
             }}
             className="font-black tracking-tighter text-3xl text-primary hover:text-accent transition-colors cursor-pointer"
           >
-            СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
+            СУШИ<span style={{ color: "#E36414" }}>МŌ</span>
           </Link>
         </div>
 

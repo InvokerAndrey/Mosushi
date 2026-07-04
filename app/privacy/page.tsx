@@ -140,7 +140,7 @@ export default function PrivacyPage() {
             href="/"
             className="font-black tracking-tighter text-3xl text-background hover:opacity-80 transition-opacity"
           >
-            СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
+            СУШИ<span style={{ color: "#E36414" }}>МŌ</span>
           </Link>
         </div>
       </header>

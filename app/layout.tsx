@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "СУШИМÕ — Доставка суши",
-  description: "Свежие суши, роллы и сеты каждый день с доставкой по Мозырю. Ручная работа, премиальные ингредиенты."
+  title: "СУШИМŌ — Доставка суши",
+  description: "Свежие суши, роллы и сеты каждый день с доставкой по Мозырю. Ручная работа, премиальные ингредиенты.",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png'
+  }
 };
 
 type RootLayoutProps = {

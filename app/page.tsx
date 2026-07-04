@@ -407,7 +407,7 @@ export default function HomePage() {
       <footer className="bg-primary text-background w-full">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-14 flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="text-xl font-bold tracking-widest">
-            СУШИ<span style={{ color: "#E36414" }}>МÕ</span>
+            СУШИ<span style={{ color: "#E36414" }}>МŌ</span>
           </div>
 
           <div className="flex flex-col md:flex-row gap-8 lg:gap-16 text-sm">
