@@ -62,6 +62,8 @@ def site_settings(request):
             "delivery_fee": 6.0,
             "free_delivery_threshold": 40.0,
             "contact_email": "sushimoby@mail.ru",
+            "payment_cash_enabled": True,
+            "payment_card_enabled": True,
         })
     return JsonResponse({
         "phone": obj.phone,
@@ -72,6 +74,8 @@ def site_settings(request):
         "delivery_fee": float(obj.delivery_fee),
         "free_delivery_threshold": float(obj.free_delivery_threshold),
         "contact_email": obj.contact_email,
+        "payment_cash_enabled": obj.payment_cash_enabled,
+        "payment_card_enabled": obj.payment_card_enabled,
     })
 
 

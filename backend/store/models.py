@@ -88,6 +88,10 @@ class SiteSettings(models.Model):
     free_delivery_threshold = models.DecimalField("Бесплатная доставка от (BYN)", max_digits=6, decimal_places=2, default=40)
     contact_email = models.EmailField("Email для уведомлений о заказах", blank=True, default="sushimoby@mail.ru")
 
+    # Payment method toggles — disable to hide from checkout and block via API
+    payment_cash_enabled = models.BooleanField("Оплата наличными", default=True)
+    payment_card_enabled = models.BooleanField("Оплата картой курьеру", default=True)
+
     class Meta:
         verbose_name = "Настройки сайта"
         verbose_name_plural = "Настройки сайта"

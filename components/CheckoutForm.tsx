@@ -47,6 +47,12 @@ export default function CheckoutForm({
 }: CheckoutFormProps) {
   const deliveryWorkStart = getScheduledDeliveryStartHour(settings?.opening_hour ?? 12);
   const deliveryWorkEnd = { hour: settings?.closing_hour ?? 22, minute: 0 };
+
+  // Derive available payment methods from settings (default to both enabled if settings not loaded yet)
+  const availablePaymentMethods = (["CASH", "CARD"] as const).filter((method) => {
+    if (method === "CASH") return settings?.payment_cash_enabled !== false;
+    return settings?.payment_card_enabled !== false;
+  });
   const handlePhoneChange = (value: string, isPickup: boolean) => {
     const formatted = formatPhoneNumber(value);
     if (isPickup) {
@@ -161,11 +167,11 @@ export default function CheckoutForm({
             {/* Address details */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {([
-                { key: "houseNumber", label: "Дом" },
-                { key: "apartment", label: "Кв." },
-                { key: "entrance", label: "Подъезд" },
-                { key: "floor", label: "Этаж" },
-              ] as const).map(({ key, label }) => (
+                { key: "houseNumber", label: "Дом", placeholder: "12Б" },
+                { key: "apartment", label: "Кв.", placeholder: "15" },
+                { key: "entrance", label: "Подъезд", placeholder: "2" },
+                { key: "floor", label: "Этаж", placeholder: "5" },
+              ] as const).map(({ key, label, placeholder }) => (
                 <div key={key} className="flex flex-col gap-1">
                   <label className="text-xs font-semibold text-secondary uppercase tracking-wider">{label}</label>
                   <input
@@ -184,6 +190,7 @@ export default function CheckoutForm({
                         ? !!deliveryErrors.apartment
                         : false
                     )}
+                    placeholder={placeholder}
                     maxLength={10}
                   />
                   {key === "houseNumber" && deliveryErrors.houseNumber && (
@@ -200,7 +207,7 @@ export default function CheckoutForm({
             <div className="flex flex-col gap-3 border-t border-secondary/20 pt-5">
               <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Способ оплаты</label>
               <div className="flex gap-6">
-                {(["CASH", "CARD"] as const).map((method) => (
+                {availablePaymentMethods.map((method) => (
                   <label key={method} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"

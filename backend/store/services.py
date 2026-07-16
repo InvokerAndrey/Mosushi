@@ -138,8 +138,13 @@ def create_order(body: dict) -> Order:
             raise OrderValidationError("Delivery: phone is required.")
         if not delivery.get("address", "").strip():
             raise OrderValidationError("Delivery: address is required.")
-        if delivery.get("paymentMethod") not in ("CASH", "CARD"):
+        payment_method = delivery.get("paymentMethod")
+        if payment_method not in ("CASH", "CARD"):
             raise OrderValidationError("Invalid payment method.")
+        if payment_method == "CASH" and settings and not settings.payment_cash_enabled:
+            raise OrderValidationError("Cash payment is currently unavailable.")
+        if payment_method == "CARD" and settings and not settings.payment_card_enabled:
+            raise OrderValidationError("Card payment is currently unavailable.")
 
         # ASAP delivery: reject if outside working hours
         if delivery.get("orderTime", "asap") == "asap" and settings:
@@ -156,7 +161,7 @@ def create_order(body: dict) -> Order:
             address=delivery["address"].strip(),
             items=line_items,
             total_price=grand_total,
-            payment_method=delivery["paymentMethod"],
+            payment_method=payment_method,
             change_amount=(delivery.get("changeAmount") or "").strip(),
             no_change=bool(delivery.get("noChange", False)),
             order_time=delivery.get("orderTime", "asap"),
