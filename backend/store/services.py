@@ -9,7 +9,7 @@ from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 
 from .email_service import send_order_email
-from .models import Order, Product, SiteSettings
+from .models import MAX_ORDER_TOTAL, Order, Product, SiteSettings
 from .telegram import send_order_to_telegram
 from .utils import get_asap_delivery_error, get_asap_pickup_error, is_asap_order_allowed
 
@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 DELIVERY_FEE_FALLBACK = Decimal("6.00")
 FREE_DELIVERY_THRESHOLD_FALLBACK = Decimal("40.00")
+MAX_CART_LINE_ITEMS = 100
+MAX_ITEM_QUANTITY = 100
+MAX_PRODUCT_ID = (1 << 63) - 1
 
 
 class OrderValidationError(Exception):
@@ -48,13 +51,21 @@ def create_order(body: dict) -> Order:
 
     # --- Top-level validation ---
     if order_type not in ("pickup", "delivery"):
-        raise OrderValidationError("Invalid order type.")
+        raise OrderValidationError("Неверный тип заказа.")
 
     if not isinstance(cart_items, dict) or not cart_items:
-        raise OrderValidationError("Cart is empty or missing.")
+        raise OrderValidationError("Корзина пуста или не передана.")
 
-    if not isinstance(client_total, (int, float)):
-        raise OrderValidationError("totalPrice must be a number.")
+    if isinstance(client_total, bool) or not isinstance(client_total, (int, float)):
+        raise OrderValidationError("Итоговая сумма должна быть числом.")
+
+    try:
+        client_total_decimal = Decimal(str(client_total))
+    except InvalidOperation as exc:
+        raise OrderValidationError("Итоговая сумма имеет неверный формат.") from exc
+
+    if not client_total_decimal.is_finite():
+        raise OrderValidationError("Итоговая сумма имеет недопустимое значение.")
 
     # --- Fetch SiteSettings once for this request ---
     settings = SiteSettings.objects.first()
@@ -62,35 +73,60 @@ def create_order(body: dict) -> Order:
     free_delivery_threshold = settings.free_delivery_threshold if settings else FREE_DELIVERY_THRESHOLD_FALLBACK
 
     # --- Build line items — prices always come from the DB, never the client ---
-    entries = [
-        (int(pid), qty)
-        for pid, qty in cart_items.items()
-        if str(pid).isdigit() and isinstance(qty, int) and qty > 0
-    ]
+    if len(cart_items) > MAX_CART_LINE_ITEMS:
+        raise OrderValidationError(
+            f"В корзине не может быть больше {MAX_CART_LINE_ITEMS} разных товаров."
+        )
 
-    if not entries:
-        raise OrderValidationError("Cart contains no valid products.")
+    entries = []
+    seen_product_ids = set()
+    for raw_product_id, quantity in cart_items.items():
+        product_id_text = str(raw_product_id)
+        if not product_id_text.isascii() or not product_id_text.isdecimal():
+            raise OrderValidationError("Корзина содержит товар с неверным идентификатором.")
+
+        product_id = int(product_id_text)
+        if product_id <= 0 or product_id > MAX_PRODUCT_ID:
+            raise OrderValidationError("Корзина содержит товар с неверным идентификатором.")
+
+        if product_id in seen_product_ids:
+            raise OrderValidationError("Корзина содержит повторяющийся идентификатор товара.")
+
+        if (
+            isinstance(quantity, bool)
+            or not isinstance(quantity, int)
+            or quantity < 1
+            or quantity > MAX_ITEM_QUANTITY
+        ):
+            raise OrderValidationError(
+                f"Количество товара должно быть от 1 до {MAX_ITEM_QUANTITY}."
+            )
+
+        entries.append((product_id, quantity))
+        seen_product_ids.add(product_id)
 
     product_ids = [pid for pid, _ in entries]
     db_products = {p.id: p for p in Product.objects.filter(id__in=product_ids, available=True)}
 
     line_items = []
+    subtotal = Decimal("0.00")
     for product_id, qty in entries:
         product = db_products.get(product_id)
         if not product:
             continue
+        line_total = product.price * qty
+        subtotal += line_total
         line_items.append({
             "name": product.name,
             "quantity": qty,
             "price": float(product.price),
-            "lineTotal": float(product.price * qty),
+            "lineTotal": float(line_total),
         })
 
     if not line_items:
-        raise OrderValidationError("Cart contains no valid products.")
+        raise OrderValidationError("В корзине нет доступных товаров.")
 
     # --- Server-side total calculation ---
-    subtotal = sum(Decimal(str(item["lineTotal"])) for item in line_items)
     delivery_fee = (
         Decimal("0.00")
         if order_type == "pickup" or subtotal >= free_delivery_threshold
@@ -98,19 +134,21 @@ def create_order(body: dict) -> Order:
     )
     grand_total = subtotal + delivery_fee
 
+    if not grand_total.is_finite() or grand_total < Decimal("0.00") or grand_total > MAX_ORDER_TOTAL:
+        raise OrderValidationError("Итоговая сумма заказа выходит за допустимый диапазон.")
+
     # Verify the client-submitted total (allow ±1 cent for float drift)
-    try:
-        if abs(grand_total - Decimal(str(client_total))) > Decimal("0.01"):
-            raise OrderValidationError("Total price mismatch.")
-    except InvalidOperation:
-        raise OrderValidationError("totalPrice is not a valid number.")
+    if abs(grand_total - client_total_decimal) > Decimal("0.01"):
+        raise OrderValidationError(
+            "Итоговая сумма изменилась. Обновите страницу и повторите заказ."
+        )
 
     # --- Order-type-specific validation and object construction ---
     if order_type == "pickup":
         if not pickup.get("name", "").strip():
-            raise OrderValidationError("Pickup: name is required.")
+            raise OrderValidationError("Укажите имя для самовывоза.")
         if not pickup.get("phoneNumber", "").strip():
-            raise OrderValidationError("Pickup: phone is required.")
+            raise OrderValidationError("Укажите номер телефона для самовывоза.")
 
         # ASAP pickup: reject if outside working hours
         if pickup.get("orderTime", "asap") == "asap" and settings:
@@ -133,18 +171,18 @@ def create_order(body: dict) -> Order:
         )
     else:
         if not delivery.get("name", "").strip():
-            raise OrderValidationError("Delivery: name is required.")
+            raise OrderValidationError("Укажите имя для доставки.")
         if not delivery.get("phoneNumber", "").strip():
-            raise OrderValidationError("Delivery: phone is required.")
+            raise OrderValidationError("Укажите номер телефона для доставки.")
         if not delivery.get("address", "").strip():
-            raise OrderValidationError("Delivery: address is required.")
+            raise OrderValidationError("Укажите адрес доставки.")
         payment_method = delivery.get("paymentMethod")
         if payment_method not in ("CASH", "CARD"):
-            raise OrderValidationError("Invalid payment method.")
+            raise OrderValidationError("Выберите доступный способ оплаты.")
         if payment_method == "CASH" and settings and not settings.payment_cash_enabled:
-            raise OrderValidationError("Cash payment is currently unavailable.")
+            raise OrderValidationError("Оплата наличными сейчас недоступна.")
         if payment_method == "CARD" and settings and not settings.payment_card_enabled:
-            raise OrderValidationError("Card payment is currently unavailable.")
+            raise OrderValidationError("Оплата картой сейчас недоступна.")
 
         # ASAP delivery: reject if outside working hours
         if delivery.get("orderTime", "asap") == "asap" and settings:

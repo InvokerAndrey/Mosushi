@@ -1,5 +1,11 @@
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+
+MAX_ORDER_TOTAL = Decimal("99999999.99")
 
 
 class Category(models.Model):
@@ -155,7 +161,15 @@ class Order(models.Model):
 
     # Full cart snapshot: [{"name": ..., "quantity": ..., "price": ..., "lineTotal": ...}]
     items = models.JSONField("Состав заказа")
-    total_price = models.DecimalField("Сумма", max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(
+        "Сумма",
+        max_digits=10,
+        decimal_places=2,
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(MAX_ORDER_TOTAL),
+        ],
+    )
 
     payment_method = models.CharField("Способ оплаты", max_length=10, blank=True)
     change_amount = models.CharField("Сдача с", max_length=50, blank=True)
@@ -172,6 +186,15 @@ class Order(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    total_price__gte=Decimal("0.00"),
+                    total_price__lte=MAX_ORDER_TOTAL,
+                ),
+                name="store_order_total_price_valid_range",
+            ),
+        ]
 
     def __str__(self):
         return f"#{self.pk} — {self.customer_name} ({self.created_at.strftime('%d.%m.%Y %H:%M')})"

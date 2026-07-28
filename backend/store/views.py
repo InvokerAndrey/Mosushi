@@ -83,12 +83,12 @@ def site_settings(request):
 @require_POST
 def create_order_view(request):
     if "application/json" not in request.content_type:
-        return _error("Content-Type must be application/json.", 415)
+        return _error("Неверный формат запроса. Ожидается application/json.", 415)
 
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
-        return _error("Invalid JSON body.", 400)
+        return _error("Не удалось прочитать данные заказа.", 400)
 
     try:
         order = create_order(body)
