@@ -1,9 +1,11 @@
 import json
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
 from django.db import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from store.models import MAX_ORDER_TOTAL, Category, Order, Product
 from store.services import (
@@ -25,6 +27,8 @@ class OrderLimitTests(TestCase):
         )
 
     def pickup_body(self, cart_items, total_price):
+        scheduled = timezone.localtime(timezone.now()) + timedelta(days=1)
+        scheduled = scheduled.replace(hour=13, minute=0, second=0, microsecond=0)
         return {
             "orderType": "pickup",
             "cartItems": cart_items,
@@ -33,7 +37,7 @@ class OrderLimitTests(TestCase):
                 "name": "Test customer",
                 "phoneNumber": "+375290000000",
                 "orderTime": "specific",
-                "scheduledTime": "Tomorrow, 12:00",
+                "scheduledTime": scheduled.isoformat(timespec="minutes"),
             },
         }
 

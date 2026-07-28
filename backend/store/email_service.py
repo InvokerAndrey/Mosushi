@@ -11,6 +11,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 from .models import Order, SiteSettings
+from .utils import format_scheduled_time
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,11 @@ def _build_context(order: Order) -> dict:
         elif order.payment_method == "CASH" and order.no_change:
             payment_display += " (без сдачи)"
 
-    scheduled = order.scheduled_time if order.scheduled_time else "Как можно скорее"
+    scheduled = (
+        format_scheduled_time(order.scheduled_time)
+        if order.scheduled_time
+        else "Как можно скорее"
+    )
 
     subtotal = sum(Decimal(str(item["lineTotal"])) for item in order.items)
     delivery_fee = order.total_price - subtotal

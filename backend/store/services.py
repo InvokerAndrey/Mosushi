@@ -4,6 +4,8 @@ Views are thin — all processing, validation, and side effects happen here.
 """
 
 import logging
+import re
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
@@ -20,11 +22,109 @@ FREE_DELIVERY_THRESHOLD_FALLBACK = Decimal("40.00")
 MAX_CART_LINE_ITEMS = 100
 MAX_ITEM_QUANTITY = 100
 MAX_PRODUCT_ID = (1 << 63) - 1
+OPENING_HOUR_FALLBACK = 12
+CLOSING_HOUR_FALLBACK = 22
+SCHEDULE_SLOT_MINUTES = 15
+MAX_SCHEDULE_DAYS_AHEAD = 30
+PICKUP_LEAD_MINUTES = 30
+DELIVERY_LEAD_MINUTES = 60
+SCHEDULED_TIME_PATTERN = re.compile(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T"
+    r"[0-9]{2}:[0-9]{2}(?::[0-9]{2}(?:\.[0-9]{1,6})?)?"
+    r"(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+)
 
 
 class OrderValidationError(Exception):
     """Raised when incoming order data fails validation."""
     pass
+
+
+def _validate_order_timing(
+    payload: dict,
+    *,
+    order_label: str,
+    opening_hour: int,
+    closing_hour: int,
+    lead_minutes: int,
+    schedule_start_minutes: int,
+) -> tuple[str, str]:
+    """Validate and normalize an ASAP or scheduled order time."""
+    order_time = payload.get("orderTime", "asap")
+    if order_time not in ("asap", "specific"):
+        raise OrderValidationError("Выберите допустимый вариант времени заказа.")
+
+    if order_time == "asap":
+        local_now = timezone.localtime(timezone.now())
+        if not is_asap_order_allowed(opening_hour, closing_hour, local_now):
+            error_factory = (
+                get_asap_pickup_error
+                if order_label == "самовывоза"
+                else get_asap_delivery_error
+            )
+            raise OrderValidationError(error_factory(opening_hour, closing_hour))
+        return "asap", ""
+
+    raw_scheduled_time = payload.get("scheduledTime")
+    if (
+        not isinstance(raw_scheduled_time, str)
+        or not raw_scheduled_time
+        or len(raw_scheduled_time) > 64
+    ):
+        raise OrderValidationError(f"Выберите время {order_label}.")
+
+    if not SCHEDULED_TIME_PATTERN.fullmatch(raw_scheduled_time):
+        raise OrderValidationError(
+            f"Время {order_label} имеет неверный формат."
+        )
+
+    try:
+        scheduled = datetime.fromisoformat(raw_scheduled_time.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise OrderValidationError(
+            f"Время {order_label} имеет неверный формат."
+        ) from exc
+
+    if timezone.is_naive(scheduled):
+        raise OrderValidationError(
+            f"Время {order_label} должно содержать часовой пояс."
+        )
+
+    local_scheduled = timezone.localtime(scheduled)
+    if (
+        local_scheduled.second != 0
+        or local_scheduled.microsecond != 0
+        or local_scheduled.minute % SCHEDULE_SLOT_MINUTES != 0
+    ):
+        raise OrderValidationError(
+            f"Время {order_label} должно быть выбрано с шагом "
+            f"{SCHEDULE_SLOT_MINUTES} минут."
+        )
+
+    local_now = timezone.localtime(timezone.now())
+    earliest_time = local_now + timedelta(minutes=lead_minutes)
+    if local_scheduled < earliest_time:
+        raise OrderValidationError(
+            f"Выбранное время {order_label} уже прошло или находится слишком близко."
+        )
+
+    latest_date = local_now.date() + timedelta(days=MAX_SCHEDULE_DAYS_AHEAD)
+    if local_scheduled.date() > latest_date:
+        raise OrderValidationError(
+            f"Время {order_label} можно выбрать не более чем на "
+            f"{MAX_SCHEDULE_DAYS_AHEAD} дней вперёд."
+        )
+
+    scheduled_minutes = local_scheduled.hour * 60 + local_scheduled.minute
+    closing_minutes = closing_hour * 60
+    if not schedule_start_minutes <= scheduled_minutes <= closing_minutes:
+        start_hour, start_minute = divmod(schedule_start_minutes, 60)
+        raise OrderValidationError(
+            f"Время {order_label} должно быть с "
+            f"{start_hour:02d}:{start_minute:02d} до {closing_hour:02d}:00."
+        )
+
+    return "specific", local_scheduled.isoformat(timespec="minutes")
 
 
 def create_order(body: dict) -> Order:
@@ -71,6 +171,8 @@ def create_order(body: dict) -> Order:
     settings = SiteSettings.objects.first()
     delivery_fee_value = settings.delivery_fee if settings else DELIVERY_FEE_FALLBACK
     free_delivery_threshold = settings.free_delivery_threshold if settings else FREE_DELIVERY_THRESHOLD_FALLBACK
+    opening_hour = settings.opening_hour if settings else OPENING_HOUR_FALLBACK
+    closing_hour = settings.closing_hour if settings else CLOSING_HOUR_FALLBACK
 
     # --- Build line items — prices always come from the DB, never the client ---
     if len(cart_items) > MAX_CART_LINE_ITEMS:
@@ -150,13 +252,14 @@ def create_order(body: dict) -> Order:
         if not pickup.get("phoneNumber", "").strip():
             raise OrderValidationError("Укажите номер телефона для самовывоза.")
 
-        # ASAP pickup: reject if outside working hours
-        if pickup.get("orderTime", "asap") == "asap" and settings:
-            local_now = timezone.localtime(timezone.now())
-            if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
-                raise OrderValidationError(
-                    get_asap_pickup_error(settings.opening_hour, settings.closing_hour)
-                )
+        order_time, scheduled_time = _validate_order_timing(
+            pickup,
+            order_label="самовывоза",
+            opening_hour=opening_hour,
+            closing_hour=closing_hour,
+            lead_minutes=PICKUP_LEAD_MINUTES,
+            schedule_start_minutes=opening_hour * 60 + PICKUP_LEAD_MINUTES,
+        )
 
         order = Order(
             order_type="pickup",
@@ -165,8 +268,8 @@ def create_order(body: dict) -> Order:
             address="",
             items=line_items,
             total_price=grand_total,
-            order_time=pickup.get("orderTime", "asap"),
-            scheduled_time=pickup.get("scheduledTime") or "",
+            order_time=order_time,
+            scheduled_time=scheduled_time,
             comment=(pickup.get("comment") or "").strip(),
         )
     else:
@@ -184,13 +287,14 @@ def create_order(body: dict) -> Order:
         if payment_method == "CARD" and settings and not settings.payment_card_enabled:
             raise OrderValidationError("Оплата картой сейчас недоступна.")
 
-        # ASAP delivery: reject if outside working hours
-        if delivery.get("orderTime", "asap") == "asap" and settings:
-            local_now = timezone.localtime(timezone.now())
-            if not is_asap_order_allowed(settings.opening_hour, settings.closing_hour, local_now):
-                raise OrderValidationError(
-                    get_asap_delivery_error(settings.opening_hour, settings.closing_hour)
-                )
+        order_time, scheduled_time = _validate_order_timing(
+            delivery,
+            order_label="доставки",
+            opening_hour=opening_hour,
+            closing_hour=closing_hour,
+            lead_minutes=DELIVERY_LEAD_MINUTES,
+            schedule_start_minutes=(opening_hour + 1) * 60,
+        )
 
         order = Order(
             order_type="delivery",
@@ -202,8 +306,8 @@ def create_order(body: dict) -> Order:
             payment_method=payment_method,
             change_amount=(delivery.get("changeAmount") or "").strip(),
             no_change=bool(delivery.get("noChange", False)),
-            order_time=delivery.get("orderTime", "asap"),
-            scheduled_time=delivery.get("scheduledTime") or "",
+            order_time=order_time,
+            scheduled_time=scheduled_time,
             comment=(delivery.get("comment") or "").strip(),
         )
 

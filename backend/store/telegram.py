@@ -7,6 +7,8 @@ import logging
 import requests
 from django.conf import settings
 
+from .utils import format_scheduled_time
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,16 +20,6 @@ def _esc(text: str) -> str:
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
-
-
-def _format_scheduled_time(raw: str) -> str:
-    """Convert 'YYYY-MM-DDTHH:MM' → 'DD.MM.YYYY HH:MM'."""
-    try:
-        date_part, time_part = raw.split("T")
-        year, month, day = date_part.split("-")
-        return f"{day}.{month}.{year} {time_part}"
-    except Exception:
-        return raw
 
 
 def build_order_message(order) -> str:
@@ -46,7 +38,7 @@ def build_order_message(order) -> str:
             "",
         ]
         time_label = (
-            f"На {_format_scheduled_time(order.scheduled_time)}"
+            f"На {_esc(format_scheduled_time(order.scheduled_time))}"
             if order.order_time == "specific" and order.scheduled_time
             else "Через 30 минут"
         )
@@ -71,7 +63,7 @@ def build_order_message(order) -> str:
 
         lines.append("")
         time_label = (
-            f"На {_format_scheduled_time(order.scheduled_time)}"
+            f"На {_esc(format_scheduled_time(order.scheduled_time))}"
             if order.order_time == "specific" and order.scheduled_time
             else "В течение часа"
         )

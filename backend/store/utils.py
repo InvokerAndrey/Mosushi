@@ -4,6 +4,8 @@ Time-related utility functions for working hours and delivery/pickup validation.
 
 from datetime import datetime
 
+from django.utils import timezone
+
 
 def format_working_hours(opening_hour: int, closing_hour: int) -> str:
     """Format working hours display string, e.g. '12:00-22:00'."""
@@ -56,4 +58,15 @@ def get_asap_pickup_error(opening_hour: int, closing_hour: int) -> str:
     """Generate the ASAP pickup out-of-hours error message."""
     cutoff = format_asap_cutoff(closing_hour)
     return f"Заказы на самовывоз принимаются с {opening_hour}:00 до {cutoff}"
+
+
+def format_scheduled_time(raw: str) -> str:
+    """Format an aware ISO timestamp in the restaurant's local timezone."""
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if timezone.is_naive(parsed):
+            return raw
+        return timezone.localtime(parsed).strftime("%d.%m.%Y %H:%M")
+    except (TypeError, ValueError):
+        return raw
 

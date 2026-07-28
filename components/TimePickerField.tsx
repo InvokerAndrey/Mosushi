@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 
 const DEFAULT_WORK_START_HOUR = 12;
 const MINUTES = [0, 15, 30, 45];
+const MAX_SCHEDULE_DAYS_AHEAD = 30;
+const BUSINESS_UTC_OFFSET = "+03:00";
 
 const MONTH_NAMES = [
   "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
@@ -30,12 +32,18 @@ function todayMidnight(): Date {
   return d;
 }
 
+function maxScheduleDate(): Date {
+  const maxDate = todayMidnight();
+  maxDate.setDate(maxDate.getDate() + MAX_SCHEDULE_DAYS_AHEAD);
+  return maxDate;
+}
+
 function isDayAvailable(day: Date, minOffsetMinutes: number, workEnd: WorkEnd): boolean {
   const today = todayMidnight();
   const dayMid = new Date(day);
   dayMid.setHours(0, 0, 0, 0);
 
-  if (dayMid < today) return false;
+  if (dayMid < today || dayMid > maxScheduleDate()) return false;
 
   if (dayMid.getTime() === today.getTime()) {
     const minTime = getMinTime(minOffsetMinutes);
@@ -143,9 +151,48 @@ function formatDayLabel(day: Date): string {
 }
 
 function buildValue(day: Date, hour: number, minute: number): string {
+  const year = day.getFullYear();
+  const month = (day.getMonth() + 1).toString().padStart(2, "0");
+  const date = day.getDate().toString().padStart(2, "0");
   const hh = hour.toString().padStart(2, "0");
   const mm = minute.toString().padStart(2, "0");
-  return `${formatDayLabel(day)}, ${hh}:${mm}`;
+  return `${year}-${month}-${date}T${hh}:${mm}${BUSINESS_UTC_OFFSET}`;
+}
+
+function parseValue(value: string): { day: Date; hour: number; minute: number } | null {
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::00)?\+03:00$/
+  );
+  if (!match) return null;
+
+  const [, rawYear, rawMonth, rawDay, rawHour, rawMinute] = match;
+  const year = Number(rawYear);
+  const month = Number(rawMonth) - 1;
+  const dayOfMonth = Number(rawDay);
+  const hour = Number(rawHour);
+  const minute = Number(rawMinute);
+  const day = new Date(year, month, dayOfMonth);
+
+  if (
+    day.getFullYear() !== year ||
+    day.getMonth() !== month ||
+    day.getDate() !== dayOfMonth ||
+    hour < 0 ||
+    hour > 23 ||
+    !MINUTES.includes(minute)
+  ) {
+    return null;
+  }
+
+  return { day, hour, minute };
+}
+
+function formatValueLabel(value: string): string {
+  const parsed = parseValue(value);
+  if (!parsed) return "";
+  const hh = parsed.hour.toString().padStart(2, "0");
+  const mm = parsed.minute.toString().padStart(2, "0");
+  return `${formatDayLabel(parsed.day)}, ${hh}:${mm}`;
 }
 
 function getCalendarWeeks(year: number, month: number): (Date | null)[][] {
@@ -215,15 +262,56 @@ export default function TimePickerField({
       setSelectedDay(null);
       setSelectedHour(null);
       setSelectedMinute(null);
+      return;
     }
-  }, [value]);
+
+    const parsed = parseValue(value);
+    const isValid =
+      parsed !== null &&
+      isDayAvailable(parsed.day, minOffsetMinutes, workEnd) &&
+      getAvailableHours(
+        parsed.day,
+        minOffsetMinutes,
+        workEnd,
+        workStart,
+        workStartMinute
+      ).includes(parsed.hour) &&
+      getAvailableMinutes(
+        parsed.day,
+        parsed.hour,
+        minOffsetMinutes,
+        workEnd,
+        workStart,
+        workStartMinute
+      ).includes(parsed.minute);
+
+    if (!parsed || !isValid) {
+      onChange("");
+      return;
+    }
+
+    setSelectedDay(parsed.day);
+    setSelectedHour(parsed.hour);
+    setSelectedMinute(parsed.minute);
+    setViewYear(parsed.day.getFullYear());
+    setViewMonth(parsed.day.getMonth());
+    // onChange is intentionally omitted: this effect only reacts to stored value/settings changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    value,
+    minOffsetMinutes,
+    workStart,
+    workStartMinute,
+    workEnd.hour,
+    workEnd.minute,
+  ]);
 
   const today = todayMidnight();
 
   const canGoPrev =
     viewYear > today.getFullYear() ||
     (viewYear === today.getFullYear() && viewMonth > today.getMonth());
-  const canGoNext = true;
+  const canGoNext = new Date(viewYear, viewMonth + 1, 1) <= maxScheduleDate();
 
   const weeks = getCalendarWeeks(viewYear, viewMonth);
   const availableHours = selectedDay
@@ -390,7 +478,8 @@ export default function TimePickerField({
       {/* ── Selected value summary ── */}
       {value && (
         <div className="border-t border-secondary/20 px-4 py-2 text-sm text-center bg-background">
-          Выбрано: <span className="font-semibold text-accent">{value}</span>
+          Выбрано:{" "}
+          <span className="font-semibold text-accent">{formatValueLabel(value)}</span>
         </div>
       )}
     </div>
