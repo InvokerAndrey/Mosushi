@@ -4,6 +4,8 @@ Sends an HTML-formatted message to the configured bot/chat.
 """
 
 import logging
+from html import escape
+
 import requests
 from django.conf import settings
 
@@ -12,14 +14,9 @@ from .utils import format_scheduled_time
 logger = logging.getLogger(__name__)
 
 
-def _esc(text: str) -> str:
-    """Escape special HTML characters for Telegram HTML parse mode."""
-    return (
-        str(text)
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+def _esc(value: object) -> str:
+    """Escape a dynamic value before inserting it into Telegram HTML."""
+    return escape(str(value), quote=False)
 
 
 def build_order_message(order) -> str:
@@ -27,7 +24,7 @@ def build_order_message(order) -> str:
     Build an HTML Telegram message from an Order model instance.
     Returns the formatted string ready to be sent.
     """
-    lines = [f"🧾 <b>Новый заказ #{order.pk}</b>", ""]
+    lines = [f"🧾 <b>Новый заказ #{_esc(order.pk)}</b>", ""]
 
     if order.order_type == "pickup":
         lines += [
@@ -73,7 +70,8 @@ def build_order_message(order) -> str:
     lines += ["", "🍣 <b>Заказ:</b>"]
     for item in order.items:
         lines.append(
-            f"• {_esc(item['name'])} x{item['quantity']} — {float(item['lineTotal']):.2f} BYN"
+            f"• {_esc(item['name'])} x{_esc(item['quantity'])} — "
+            f"{float(item['lineTotal']):.2f} BYN"
         )
 
     lines.append("")
