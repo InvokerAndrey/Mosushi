@@ -1,6 +1,12 @@
 # dependencies
 /node_modules
 
+# repository metadata and backend data must never enter the frontend build context
+/.git
+/.github
+/backend
+**/*.sqlite3
+
 # next.js
 /.next/
 /out/
@@ -18,10 +24,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# env files — keep .env.example committed for documentation
+# environment files are configuration, never image input
 .env
-.env.local
-.env.*.local
+.env.*
+**/.env
+**/.env.*
 
 # typescript
 *.tsbuildinfo

@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const DJANGO_API = process.env.DJANGO_API_URL ?? "http://backend:8000";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   /**
    * Proxy API calls and media files to the Django backend.
    * The browser only ever sees localhost:3000 — no CORS issues.
