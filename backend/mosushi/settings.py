@@ -9,6 +9,19 @@ env = environ.Env(
     EMAIL_PORT=(int, 465),
     EMAIL_USE_SSL=(bool, True),
     CSRF_TRUSTED_ORIGINS=(list, []),
+    ORDER_RATE_LIMIT_MAX_REQUESTS=(int, 5),
+    ORDER_RATE_LIMIT_WINDOW_SECONDS=(int, 300),
+    ORDER_RATE_LIMIT_PROXY_COUNT=(int, 1),
+    ORDER_RATE_LIMIT_TRUSTED_PROXY_CIDRS=(
+        list,
+        [
+            "127.0.0.0/8",
+            "::1/128",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+        ],
+    ),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -18,6 +31,15 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
+
+# Public order endpoint rate limiting.
+# PROXY_COUNT=1 matches the default client -> Next.js -> Django deployment.
+ORDER_RATE_LIMIT_MAX_REQUESTS = env("ORDER_RATE_LIMIT_MAX_REQUESTS")
+ORDER_RATE_LIMIT_WINDOW_SECONDS = env("ORDER_RATE_LIMIT_WINDOW_SECONDS")
+ORDER_RATE_LIMIT_PROXY_COUNT = env("ORDER_RATE_LIMIT_PROXY_COUNT")
+ORDER_RATE_LIMIT_TRUSTED_PROXY_CIDRS = env(
+    "ORDER_RATE_LIMIT_TRUSTED_PROXY_CIDRS"
+)
 
 # Email — Mail.ru SMTP
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

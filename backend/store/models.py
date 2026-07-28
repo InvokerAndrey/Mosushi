@@ -198,3 +198,15 @@ class Order(models.Model):
 
     def __str__(self):
         return f"#{self.pk} — {self.customer_name} ({self.created_at.strftime('%d.%m.%Y %H:%M')})"
+
+
+class OrderRateLimitBucket(models.Model):
+    """Persistent fixed-window counter for the public order endpoint."""
+
+    key = models.CharField(max_length=64, primary_key=True, editable=False)
+    request_count = models.PositiveIntegerField(default=1)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name = "Счётчик ограничения заказов"
+        verbose_name_plural = "Счётчики ограничения заказов"

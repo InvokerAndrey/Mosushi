@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Category, InfoBlock, Product, SiteSettings
+from .rate_limit import consume_order_request
 from .services import OrderValidationError, create_order
 
 
@@ -82,6 +83,16 @@ def site_settings(request):
 @csrf_exempt
 @require_POST
 def create_order_view(request):
+    allowed, retry_after = consume_order_request(request)
+    if not allowed:
+        response = _error(
+            "Слишком много попыток оформления заказа. Повторите позже.",
+            429,
+        )
+        response["Retry-After"] = str(retry_after)
+        response["Cache-Control"] = "no-store"
+        return response
+
     if "application/json" not in request.content_type:
         return _error("Неверный формат запроса. Ожидается application/json.", 415)
 
