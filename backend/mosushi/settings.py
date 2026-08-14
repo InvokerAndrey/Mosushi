@@ -8,6 +8,7 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     EMAIL_PORT=(int, 465),
     EMAIL_USE_SSL=(bool, True),
+    EMAIL_TIMEOUT=(int, 10),
     CSRF_TRUSTED_ORIGINS=(list, []),
     ORDER_RATE_LIMIT_MAX_REQUESTS=(int, 5),
     ORDER_RATE_LIMIT_WINDOW_SECONDS=(int, 300),
@@ -49,6 +50,7 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_SSL = env("EMAIL_USE_SSL")
 EMAIL_USE_TLS = False  # SSL and TLS are mutually exclusive; Mail.ru uses SSL on port 465
+EMAIL_TIMEOUT = env("EMAIL_TIMEOUT")
 
 INSTALLED_APPS = [
     "django.contrib.admin",

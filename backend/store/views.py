@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Category, InfoBlock, Product, SiteSettings
+from .models import DEFAULT_ORDER_SUCCESS_MESSAGE, Category, InfoBlock, Product, SiteSettings
 from .rate_limit import consume_order_request
 from .services import OrderValidationError, create_order
 
@@ -63,6 +63,7 @@ def site_settings(request):
             "delivery_fee": 6.0,
             "free_delivery_threshold": 40.0,
             "contact_email": "sushimoby@mail.ru",
+            "order_success_message": DEFAULT_ORDER_SUCCESS_MESSAGE,
             "payment_cash_enabled": True,
             "payment_card_enabled": True,
         })
@@ -75,6 +76,7 @@ def site_settings(request):
         "delivery_fee": float(obj.delivery_fee),
         "free_delivery_threshold": float(obj.free_delivery_threshold),
         "contact_email": obj.contact_email,
+        "order_success_message": obj.order_success_message,
         "payment_cash_enabled": obj.payment_cash_enabled,
         "payment_card_enabled": obj.payment_card_enabled,
     })

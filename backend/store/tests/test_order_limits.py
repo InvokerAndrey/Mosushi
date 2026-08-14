@@ -12,6 +12,7 @@ from store.services import (
     MAX_CART_LINE_ITEMS,
     MAX_ITEM_QUANTITY,
     OrderValidationError,
+    _send_order_notifications,
     create_order,
 )
 
@@ -56,6 +57,18 @@ class OrderLimitTests(TestCase):
         saved_order = Order.objects.get(pk=order.pk)
         self.assertEqual(saved_order.total_price, expected_total)
         self.assertEqual(saved_order.items[0]["quantity"], MAX_ITEM_QUANTITY)
+
+    @patch("store.services._notification_executor.submit")
+    def test_notifications_are_enqueued_after_the_order_is_committed(self, submit):
+        with self.captureOnCommitCallbacks(execute=True):
+            order = create_order(
+                self.pickup_body({str(self.product.pk): 1}, 10.0)
+            )
+
+        submit.assert_called_once()
+        callback, order_id = submit.call_args.args
+        self.assertEqual(callback, _send_order_notifications)
+        self.assertEqual(order_id, order.pk)
 
     def test_rejects_quantity_above_limit_before_saving(self):
         with self.assertRaisesRegex(OrderValidationError, "Количество товара должно быть"):

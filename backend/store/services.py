@@ -5,9 +5,11 @@ Views are thin — all processing, validation, and side effects happen here.
 
 import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
+from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from .email_service import send_order_email
@@ -16,6 +18,11 @@ from .telegram import send_order_to_telegram
 from .utils import get_asap_delivery_error, get_asap_pickup_error, is_asap_order_allowed
 
 logger = logging.getLogger(__name__)
+
+_notification_executor = ThreadPoolExecutor(
+    max_workers=2,
+    thread_name_prefix="order-notification",
+)
 
 DELIVERY_FEE_FALLBACK = Decimal("6.00")
 FREE_DELIVERY_THRESHOLD_FALLBACK = Decimal("40.00")
@@ -38,6 +45,30 @@ SCHEDULED_TIME_PATTERN = re.compile(
 class OrderValidationError(Exception):
     """Raised when incoming order data fails validation."""
     pass
+
+
+def _send_order_notifications(order_id: int) -> None:
+    """Send external notifications outside the order request lifecycle."""
+    close_old_connections()
+    try:
+        order = Order.objects.get(pk=order_id)
+
+        if not send_order_to_telegram(order):
+            logger.warning("Order #%d saved, but Telegram notification failed.", order.pk)
+
+        if not send_order_email(order):
+            logger.warning("Order #%d saved, but email notification failed.", order.pk)
+    except Exception:
+        logger.exception("Order #%d: unexpected notification error.", order_id)
+    finally:
+        close_old_connections()
+
+
+def _enqueue_order_notifications(order_id: int) -> None:
+    try:
+        _notification_executor.submit(_send_order_notifications, order_id)
+    except RuntimeError:
+        logger.exception("Order #%d: could not enqueue notifications.", order_id)
 
 
 def _validate_order_timing(
@@ -315,12 +346,10 @@ def create_order(body: dict) -> Order:
     order.save()
     logger.info("Order #%d created: %s %s", order.pk, order.order_type, order.customer_name)
 
-    # --- Telegram notification (never blocks or cancels the order on failure) ---
-    if not send_order_to_telegram(order):
-        logger.warning("Order #%d saved, but Telegram notification failed.", order.pk)
-
-    # --- Email notification (never blocks or cancels the order on failure) ---
-    if not send_order_email(order):
-        logger.warning("Order #%d saved, but email notification failed.", order.pk)
+    # External services must not delay the HTTP response. If create_order is
+    # called inside an atomic block, enqueue only after the order is committed.
+    transaction.on_commit(
+        lambda order_id=order.pk: _enqueue_order_notifications(order_id)
+    )
 
     return order

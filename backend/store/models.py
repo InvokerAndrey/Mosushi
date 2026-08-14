@@ -6,6 +6,7 @@ from django.db import models
 
 
 MAX_ORDER_TOTAL = Decimal("99999999.99")
+DEFAULT_ORDER_SUCCESS_MESSAGE = "Заказ успешно оформлен! Мы скоро свяжемся с вами."
 
 
 class Category(models.Model):
@@ -93,6 +94,10 @@ class SiteSettings(models.Model):
     delivery_fee = models.DecimalField("Стоимость доставки (BYN)", max_digits=6, decimal_places=2, default=6)
     free_delivery_threshold = models.DecimalField("Бесплатная доставка от (BYN)", max_digits=6, decimal_places=2, default=40)
     contact_email = models.EmailField("Email для уведомлений о заказах", blank=True, default="sushimoby@mail.ru")
+    order_success_message = models.TextField(
+        "Сообщение после успешного оформления заказа",
+        default=DEFAULT_ORDER_SUCCESS_MESSAGE,
+    )
 
     # Payment method toggles — disable to hide from checkout and block via API
     payment_cash_enabled = models.BooleanField("Оплата наличными", default=True)

@@ -45,6 +45,7 @@ export type SiteSettings = {
   delivery_fee: number;
   free_delivery_threshold: number;
   contact_email: string;
+  order_success_message: string;
   payment_cash_enabled: boolean;
   payment_card_enabled: boolean;
 };

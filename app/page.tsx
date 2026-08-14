@@ -270,7 +270,10 @@ export default function HomePage() {
         return;
       }
 
-      setSuccessMessage("Заказ успешно оформлен! Мы скоро свяжемся с вами.");
+      setSuccessMessage(
+        siteSettings?.order_success_message?.trim() ||
+          "Заказ успешно оформлен! Мы скоро свяжемся с вами."
+      );
       setCartItems({});
       setPickupErrors({});
       setDeliveryErrors({});
