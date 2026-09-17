@@ -6,6 +6,7 @@ from django.db import models
 
 
 MAX_ORDER_TOTAL = Decimal("99999999.99")
+MAX_CUTLERY_SETS = 100
 DEFAULT_ORDER_SUCCESS_MESSAGE = "Заказ успешно оформлен! Мы скоро свяжемся с вами."
 
 
@@ -166,6 +167,11 @@ class Order(models.Model):
 
     # Full cart snapshot: [{"name": ..., "quantity": ..., "price": ..., "lineTotal": ...}]
     items = models.JSONField("Состав заказа")
+    cutlery_sets = models.PositiveSmallIntegerField(
+        "Комплекты палочек",
+        default=0,
+        validators=[MaxValueValidator(MAX_CUTLERY_SETS)],
+    )
     total_price = models.DecimalField(
         "Сумма",
         max_digits=10,
@@ -198,6 +204,13 @@ class Order(models.Model):
                     total_price__lte=MAX_ORDER_TOTAL,
                 ),
                 name="store_order_total_price_valid_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    cutlery_sets__gte=0,
+                    cutlery_sets__lte=MAX_CUTLERY_SETS,
+                ),
+                name="store_order_cutlery_sets_valid_range",
             ),
         ]
 

@@ -26,6 +26,7 @@ def malicious_delivery_order():
                 "lineTotal": 10,
             }
         ],
+        cutlery_sets="</b><i>12</i>",
         total_price=Decimal("16.00"),
         comment="Комментарий </b><pre>инъекция</pre> & ещё",
     )
@@ -53,6 +54,7 @@ class TelegramHtmlSafetyTests(SimpleTestCase):
         self.assertIn("&lt;tg-spoiler&gt;завтра&lt;/tg-spoiler&gt;", message)
         self.assertIn("&lt;blockquote&gt;опасный&lt;/blockquote&gt;", message)
         self.assertIn("&lt;i&gt;999&lt;/i&gt;", message)
+        self.assertIn("&lt;i&gt;12&lt;/i&gt;", message)
         self.assertIn("&amp; ещё", message)
 
         # Trusted markup used by the notification template remains intact.

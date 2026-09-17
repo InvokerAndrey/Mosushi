@@ -74,6 +74,8 @@ def build_order_message(order) -> str:
             f"{float(item['lineTotal']):.2f} BYN"
         )
 
+    lines.append(f"🥢 <b>Комплекты палочек:</b> {_esc(order.cutlery_sets)}")
+
     lines.append("")
     if order.order_type == "delivery":
         subtotal = sum(float(i["lineTotal"]) for i in order.items)

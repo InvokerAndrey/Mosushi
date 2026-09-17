@@ -87,6 +87,9 @@
         <span class="info-label">Телефон:</span>
         <span class="info-value">{{ order.phone }}</span>
 
+        <span class="info-label">Комплекты палочек:</span>
+        <span class="info-value">{{ order.cutlery_sets }}</span>
+
         {% if order.order_type == "delivery" %}
         <span class="info-label">Адрес:</span>
         <span class="info-value">{{ order.address }}</span>

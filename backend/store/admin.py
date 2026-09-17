@@ -84,12 +84,15 @@ class InfoBlockAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "customer_name", "phone", "order_type", "total_price", "status", "created_at")
+    list_display = (
+        "id", "customer_name", "phone", "order_type", "cutlery_sets",
+        "total_price", "status", "created_at",
+    )
     list_filter = ("status",)
     search_fields = ("customer_name", "phone")
     list_editable = ("status",)
     readonly_fields = (
-        "order_type", "customer_name", "phone", "address", "items",
+        "order_type", "customer_name", "phone", "address", "items", "cutlery_sets",
         "total_price", "payment_method", "change_amount", "no_change",
         "order_time", "scheduled_time", "comment", "created_at",
     )

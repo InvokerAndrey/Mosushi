@@ -3,6 +3,7 @@
 import type { CartLineItem } from "@/lib/types";
 import type { CheckoutTab } from "@/lib/validations";
 import CartItemCard from "./cart/CartItemCard";
+import CutleryCartItem from "./cart/CutleryCartItem";
 
 type CartSummaryProps = {
   lineItems: CartLineItem[];
@@ -10,8 +11,10 @@ type CartSummaryProps = {
   deliveryFee: number;
   freeDeliveryThreshold: number;
   activeTab: CheckoutTab;
+  cutlerySets: number;
   onIncreaseItem: (itemId: string) => void;
   onDecreaseItem: (itemId: string) => void;
+  onCutlerySetsChange: (quantity: number) => void;
   onClearCart: () => void;
 };
 
@@ -21,8 +24,10 @@ export default function CartSummary({
   deliveryFee,
   freeDeliveryThreshold,
   activeTab,
+  cutlerySets,
   onIncreaseItem,
   onDecreaseItem,
+  onCutlerySetsChange,
   onClearCart
 }: CartSummaryProps) {
   const grandTotal = subtotalPrice + deliveryFee;
@@ -33,7 +38,7 @@ export default function CartSummary({
       {/* Header row: title + clear button */}
       <div className="flex items-center justify-between mb-5">
         <h3 className="font-bold text-text text-lg uppercase tracking-widest">Ваш заказ</h3>
-        {lineItems.length > 0 && (
+        {(lineItems.length > 0 || cutlerySets > 0) && (
           <button
             type="button"
             onClick={onClearCart}
@@ -53,19 +58,22 @@ export default function CartSummary({
           <p className="text-sm mt-1 opacity-60">Добавьте суши из меню выше</p>
         </div>
       ) : (
-        <>
-          {/* Item list */}
-          <div className="space-y-1 mb-4">
-            {lineItems.map((item) => (
-              <CartItemCard
-                key={item.id}
-                item={item}
-                onIncrease={() => onIncreaseItem(item.id)}
-                onDecrease={() => onDecreaseItem(item.id)}
-              />
-            ))}
-          </div>
+        <div className="space-y-1">
+          {lineItems.map((item) => (
+            <CartItemCard
+              key={item.id}
+              item={item}
+              onIncrease={() => onIncreaseItem(item.id)}
+              onDecrease={() => onDecreaseItem(item.id)}
+            />
+          ))}
+        </div>
+      )}
 
+      <CutleryCartItem quantity={cutlerySets} onChange={onCutlerySetsChange} />
+
+      {lineItems.length > 0 && (
+        <>
           {/* Totals */}
           <div className="space-y-2 pt-4">
             {isDelivery && (

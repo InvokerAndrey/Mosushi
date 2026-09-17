@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from store.models import MAX_ORDER_TOTAL, Category, Order, Product
+from store.models import MAX_CUTLERY_SETS, MAX_ORDER_TOTAL, Category, Order, Product
 from store.services import (
     MAX_CART_LINE_ITEMS,
     MAX_ITEM_QUANTITY,
@@ -80,6 +80,28 @@ class OrderLimitTests(TestCase):
             )
 
         self.assertFalse(Order.objects.exists())
+
+    def test_accepts_cutlery_quantity_boundaries(self):
+        for quantity in (0, MAX_CUTLERY_SETS):
+            with self.subTest(quantity=quantity):
+                body = self.pickup_body({str(self.product.pk): 1}, 10.0)
+                body["cutlerySets"] = quantity
+
+                order = create_order(body)
+
+                self.assertEqual(order.cutlery_sets, quantity)
+
+    def test_rejects_invalid_cutlery_quantities(self):
+        for quantity in (-1, MAX_CUTLERY_SETS + 1, 1.5, "2", True):
+            with self.subTest(quantity=quantity):
+                body = self.pickup_body({str(self.product.pk): 1}, 10.0)
+                body["cutlerySets"] = quantity
+
+                with self.assertRaisesRegex(
+                    OrderValidationError,
+                    "Количество комплектов палочек должно быть",
+                ):
+                    create_order(body)
 
     def test_rejects_original_extreme_quantity_scenario(self):
         with self.assertRaisesRegex(OrderValidationError, "Количество товара должно быть"):

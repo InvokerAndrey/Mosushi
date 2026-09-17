@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { readCartFromStorage, writeCartToStorage } from "@/lib/cart";
+import {
+  readCartFromStorage,
+  readCutlerySetsFromStorage,
+  writeCartToStorage,
+  writeCutlerySetsToStorage,
+} from "@/lib/cart";
+import { MAX_CUTLERY_SETS } from "@/lib/constants";
 import type { CartState, Category, MenuItem, SiteSettings } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
 import {
@@ -35,6 +41,7 @@ export default function HomePage() {
 
   // --- Cart ---
   const [cartItems, setCartItems] = useState<CartState>({});
+  const [cutlerySets, setCutlerySets] = useState(0);
   const [isCartReady, setIsCartReady] = useState(false);
 
   // --- UI ---
@@ -113,13 +120,15 @@ export default function HomePage() {
   // --- Cart persistence ---
   useEffect(() => {
     setCartItems(readCartFromStorage());
+    setCutlerySets(readCutlerySetsFromStorage());
     setIsCartReady(true);
   }, []);
 
   useEffect(() => {
     if (!isCartReady) return;
     writeCartToStorage(cartItems);
-  }, [cartItems, isCartReady]);
+    writeCutlerySetsToStorage(cutlerySets);
+  }, [cartItems, cutlerySets, isCartReady]);
 
   // --- Scroll helper ---
   const scrollToSection = (id: string) => {
@@ -184,7 +193,16 @@ export default function HomePage() {
     });
   };
 
-  const handleClearCart = () => setCartItems({});
+  const handleCutlerySetsChange = (quantity: number) => {
+    setSuccessMessage("");
+    setRequestError("");
+    setCutlerySets(Math.min(MAX_CUTLERY_SETS, Math.max(0, Math.trunc(quantity))));
+  };
+
+  const handleClearCart = () => {
+    setCartItems({});
+    setCutlerySets(0);
+  };
 
   // --- Order submission ---
   const handleSubmitOrder = async () => {
@@ -237,6 +255,7 @@ export default function HomePage() {
       orderType: activeTab,
       totalPrice: grandTotal,
       cartItems,
+      cutlerySets,
       pickup: {
         name: pickupForm.name,
         phoneNumber: pickupForm.phoneNumber,
@@ -275,6 +294,7 @@ export default function HomePage() {
           "Заказ успешно оформлен! Мы скоро свяжемся с вами."
       );
       setCartItems({});
+      setCutlerySets(0);
       setPickupErrors({});
       setDeliveryErrors({});
       resetForms();
@@ -363,8 +383,10 @@ export default function HomePage() {
               deliveryFee={deliveryFee}
               freeDeliveryThreshold={siteSettings?.free_delivery_threshold ?? 40}
               activeTab={activeTab}
+              cutlerySets={cutlerySets}
               onIncreaseItem={handleAddToCart}
               onDecreaseItem={handleRemoveFromCart}
+              onCutlerySetsChange={handleCutlerySetsChange}
               onClearCart={handleClearCart}
             />
           </div>

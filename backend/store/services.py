@@ -13,7 +13,7 @@ from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from .email_service import send_order_email
-from .models import MAX_ORDER_TOTAL, Order, Product, SiteSettings
+from .models import MAX_CUTLERY_SETS, MAX_ORDER_TOTAL, Order, Product, SiteSettings
 from .telegram import send_order_to_telegram
 from .utils import get_asap_delivery_error, get_asap_pickup_error, is_asap_order_allowed
 
@@ -176,6 +176,7 @@ def create_order(body: dict) -> Order:
     """
     order_type = body.get("orderType")
     cart_items = body.get("cartItems")
+    cutlery_sets = body.get("cutlerySets", 0)
     client_total = body.get("totalPrice")
     pickup = body.get("pickup") or {}
     delivery = body.get("delivery") or {}
@@ -186,6 +187,16 @@ def create_order(body: dict) -> Order:
 
     if not isinstance(cart_items, dict) or not cart_items:
         raise OrderValidationError("Корзина пуста или не передана.")
+
+    if (
+        isinstance(cutlery_sets, bool)
+        or not isinstance(cutlery_sets, int)
+        or cutlery_sets < 0
+        or cutlery_sets > MAX_CUTLERY_SETS
+    ):
+        raise OrderValidationError(
+            f"Количество комплектов палочек должно быть от 0 до {MAX_CUTLERY_SETS}."
+        )
 
     if isinstance(client_total, bool) or not isinstance(client_total, (int, float)):
         raise OrderValidationError("Итоговая сумма должна быть числом.")
@@ -298,6 +309,7 @@ def create_order(body: dict) -> Order:
             phone=pickup["phoneNumber"].strip(),
             address="",
             items=line_items,
+            cutlery_sets=cutlery_sets,
             total_price=grand_total,
             order_time=order_time,
             scheduled_time=scheduled_time,
@@ -333,6 +345,7 @@ def create_order(body: dict) -> Order:
             phone=delivery["phoneNumber"].strip(),
             address=delivery["address"].strip(),
             items=line_items,
+            cutlery_sets=cutlery_sets,
             total_price=grand_total,
             payment_method=payment_method,
             change_amount=(delivery.get("changeAmount") or "").strip(),

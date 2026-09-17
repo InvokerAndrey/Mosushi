@@ -9,6 +9,7 @@
 КЛИЕНТ
   Имя          : {{ order.customer_name }}
   Телефон      : {{ order.phone }}
+  Палочки      : {{ order.cutlery_sets }} компл.
 {% if order.order_type == "delivery" %}
   Адрес        : {{ order.address }}
   Оплата       : {{ payment_display }}
