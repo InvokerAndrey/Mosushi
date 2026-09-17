@@ -7,7 +7,14 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from store.models import MAX_CUTLERY_SETS, MAX_ORDER_TOTAL, Category, Order, Product
+from store.models import (
+    DEFAULT_CUTLERY_SETS,
+    MAX_CUTLERY_SETS,
+    MAX_ORDER_TOTAL,
+    Category,
+    Order,
+    Product,
+)
 from store.services import (
     MAX_CART_LINE_ITEMS,
     MAX_ITEM_QUANTITY,
@@ -57,6 +64,7 @@ class OrderLimitTests(TestCase):
         saved_order = Order.objects.get(pk=order.pk)
         self.assertEqual(saved_order.total_price, expected_total)
         self.assertEqual(saved_order.items[0]["quantity"], MAX_ITEM_QUANTITY)
+        self.assertEqual(saved_order.cutlery_sets, DEFAULT_CUTLERY_SETS)
 
     @patch("store.services._notification_executor.submit")
     def test_notifications_are_enqueued_after_the_order_is_committed(self, submit):

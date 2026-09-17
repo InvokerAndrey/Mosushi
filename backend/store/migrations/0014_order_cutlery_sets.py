@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
             model_name="order",
             name="cutlery_sets",
             field=models.PositiveSmallIntegerField(
-                default=0,
+                default=2,
                 verbose_name="Комплекты палочек",
                 validators=[django.core.validators.MaxValueValidator(100)],
             ),

@@ -1,6 +1,7 @@
 import {
   CART_STORAGE_KEY,
   CUTLERY_STORAGE_KEY,
+  DEFAULT_CUTLERY_SETS,
   MAX_CUTLERY_SETS,
 } from "./constants";
 import type { CartState } from "./types";
@@ -22,12 +23,12 @@ export const writeCartToStorage = (cartItems: CartState): void => {
 
 export const readCutlerySetsFromStorage = (): number => {
   const saved = localStorage.getItem(CUTLERY_STORAGE_KEY);
-  if (saved === null) return 0;
+  if (saved === null) return DEFAULT_CUTLERY_SETS;
 
   const quantity = Number(saved);
   if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_CUTLERY_SETS) {
     localStorage.removeItem(CUTLERY_STORAGE_KEY);
-    return 0;
+    return DEFAULT_CUTLERY_SETS;
   }
 
   return quantity;

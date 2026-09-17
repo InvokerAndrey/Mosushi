@@ -7,7 +7,7 @@ import {
   writeCartToStorage,
   writeCutlerySetsToStorage,
 } from "@/lib/cart";
-import { MAX_CUTLERY_SETS } from "@/lib/constants";
+import { DEFAULT_CUTLERY_SETS, MAX_CUTLERY_SETS } from "@/lib/constants";
 import type { CartState, Category, MenuItem, SiteSettings } from "@/lib/types";
 import { useCheckoutForm } from "@/lib/hooks/useCheckoutForm";
 import {
@@ -41,7 +41,7 @@ export default function HomePage() {
 
   // --- Cart ---
   const [cartItems, setCartItems] = useState<CartState>({});
-  const [cutlerySets, setCutlerySets] = useState(0);
+  const [cutlerySets, setCutlerySets] = useState(DEFAULT_CUTLERY_SETS);
   const [isCartReady, setIsCartReady] = useState(false);
 
   // --- UI ---
@@ -201,7 +201,7 @@ export default function HomePage() {
 
   const handleClearCart = () => {
     setCartItems({});
-    setCutlerySets(0);
+    setCutlerySets(DEFAULT_CUTLERY_SETS);
   };
 
   // --- Order submission ---
@@ -294,7 +294,7 @@ export default function HomePage() {
           "Заказ успешно оформлен! Мы скоро свяжемся с вами."
       );
       setCartItems({});
-      setCutlerySets(0);
+      setCutlerySets(DEFAULT_CUTLERY_SETS);
       setPickupErrors({});
       setDeliveryErrors({});
       resetForms();

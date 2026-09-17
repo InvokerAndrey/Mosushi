@@ -7,6 +7,7 @@ from django.db import models
 
 MAX_ORDER_TOTAL = Decimal("99999999.99")
 MAX_CUTLERY_SETS = 100
+DEFAULT_CUTLERY_SETS = 2
 DEFAULT_ORDER_SUCCESS_MESSAGE = "Заказ успешно оформлен! Мы скоро свяжемся с вами."
 
 
@@ -169,7 +170,7 @@ class Order(models.Model):
     items = models.JSONField("Состав заказа")
     cutlery_sets = models.PositiveSmallIntegerField(
         "Комплекты палочек",
-        default=0,
+        default=DEFAULT_CUTLERY_SETS,
         validators=[MaxValueValidator(MAX_CUTLERY_SETS)],
     )
     total_price = models.DecimalField(
