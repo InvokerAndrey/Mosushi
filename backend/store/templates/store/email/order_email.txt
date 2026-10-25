@@ -9,7 +9,6 @@
 КЛИЕНТ
   Имя          : {{ order.customer_name }}
   Телефон      : {{ order.phone }}
-  Палочки      : {{ order.cutlery_sets }} компл.
 {% if order.order_type == "delivery" %}
   Адрес        : {{ order.address }}
   Оплата       : {{ payment_display }}
@@ -21,7 +20,9 @@
 ----------------------------------------
 {% for item in order.items %}  {{ item.name }}
     {{ item.quantity }} × {{ item.price }} BYN = {{ item.lineTotal }} BYN
-{% endfor %}----------------------------------------
+{% endfor %}  Комплекты палочек
+    {{ order.cutlery_sets }} × 0 BYN = 0 BYN
+----------------------------------------
 {% if delivery_fee %}  Сумма заказа    : {{ subtotal }} BYN
   Стоимость доставки: {{ delivery_fee }} BYN
 {% endif %}  ИТОГО: {{ order.total_price }} BYN

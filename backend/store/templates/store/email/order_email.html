@@ -87,9 +87,6 @@
         <span class="info-label">Телефон:</span>
         <span class="info-value">{{ order.phone }}</span>
 
-        <span class="info-label">Комплекты палочек:</span>
-        <span class="info-value">{{ order.cutlery_sets }}</span>
-
         {% if order.order_type == "delivery" %}
         <span class="info-label">Адрес:</span>
         <span class="info-value">{{ order.address }}</span>
@@ -125,6 +122,14 @@
             <td class="line-total">{{ item.lineTotal }} BYN</td>
           </tr>
           {% endfor %}
+          <tr>
+            <td>
+              Комплекты палочек
+              <span class="qty"> × 0 BYN</span>
+            </td>
+            <td class="col-qty">{{ order.cutlery_sets }}</td>
+            <td class="line-total">0 BYN</td>
+          </tr>
           {% if delivery_fee %}
           <tr>
             <td colspan="2" style="color:#888; font-size:14px;">Сумма заказа:</td>
